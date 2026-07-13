@@ -1,0 +1,431 @@
+/////////////////////////////////////////////////////////////
+//                                                         //
+//  Symp v0.x (Pseudocode)                                 //
+//                                                         //
+//  A mutable virtual filesystem where symbolic programs,  //
+//  notes, data, references, and directories all live as   //
+//  navigable nodes.                                       //
+//                                                         //
+/////////////////////////////////////////////////////////////
+
+// Data structures
+
+Expr        : Literal | List | Var | Native | Prg
+
+Literal     : string | number | boolean
+List        : {kind: "LIST", args: Expr[]}
+Var         : {kind: "VAR", name: string}
+
+Native      : {kind: "NATIVE", apply: (args: Expr[], rootdir: Dir, curdir: Dir) => Expr}
+
+Prg         : {kind: "PRG", args: string[], vars: string[], instr: Instr[], curdir: Dir}
+Instr       : Lbl | Call | Asgn | Jne | Jeq | Jmp | Ret
+Lbl         : {kind: "LABEL", label: string}
+Asgn        : {kind: "ASGN", var: Var, value: Expr}
+Jne         : {kind: "JMPNE", e1: Expr, e2: Expr, label: string}
+Jeq         : {kind: "JMPEQ", e1: Expr, e2: Expr, label: string}
+Jmp         : {kind: "JMP", label: string}
+Call        : {kind: "CALL", type: "STMT" | "EXPR", caller: Native | Prg | Call | Var, args: Expr[]}
+Ret         : {kind: "RETURN", value: Expr}
+
+File        : Dir | Data | Link
+Dir         : {kind: "DIR", items: Map<string, File>}
+Data        : {kind: "DATA", value: string}
+Link        : {kind: "LINK", path: string}
+
+// Code implementation
+
+function compilePrg(code: string, rootdir: Dir, curdir: Dir): Prg
+
+function main(args: Expr[], root: Dir): Expr
+    if not root.items.has("main")
+        Error(`Required procedure 'main' is missing from the root directory`)
+        
+    return evalExpr({
+        kind: "CALL",
+        type: "STMT",
+        caller: BUILTINS["complf"].apply(["main"], root, root)
+        args: args
+    }, root, root)
+
+function run(prog: Prg, args: Expr[], rootdir: Dir): Expr
+    env = {}
+    for i = 0 to prog.args.length - 1
+        env[prog.args[i]] = args[i]
+    
+    for i = 0 to prog.vars.length - 1
+        env[prog.vars[i]] = undefined
+    
+    labels = {}
+    for idx = 0 to prog.instr.length - 1
+        if prog.instr[idx].kind == "LABEL"
+            labels[prog.instr[idx].label] = idx
+    
+    idx = 0
+    while idx < prog.instr.length
+        instr = prog.instr[idx]
+        if instr.kind == "CALL"
+            evalCall("STMT", instr, env, rootdir, prog.curdir)
+        
+        else if instr.kind ==  "RETURN"
+            return evalExpr(instr.value, env, rootdir, prog.curdir)
+                
+        else if instr.kind == "ASGN"
+            env[instr.var.name] = evalExpr(instr.value, env, rootdir, prog.curdir)
+        
+        else if instr.kind == "JMPNE"
+                e1 = evalExpr(instr.e1, env, rootdir, prog.curdir)
+                e2 = evalExpr(instr.e2, env, rootdir, prog.curdir)
+                if e1 is not Literal or e2 is not Literal
+                    Error(`Compared values not reduced to literals`)
+                
+                if instr.label not in labels
+                    Error(`Nonexisting label: ${instr.label}`)
+
+                if e1 != e2
+                    idx = labels[instr.label]
+            
+        else if instr.kind == "JMPEQ"
+                e1 = evalExpr(instr.e1, env, rootdir, prog.curdir)
+                e2 = evalExpr(instr.e2, env, rootdir, prog.curdir)
+                if e1 is not Literal or e2 is not Literal
+                    Error(`Compared values not reduced to literals`)
+                
+                if instr.label not in labels
+                    Error(`Nonexisting label: ${instr.label}`)
+
+                if e1 == e2
+                    idx = labels[instr.label]
+            
+        else if instr.kind ==  "JMP"
+            if instr.label not in labels
+                Error(`Nonexisting label: ${instr.label}`)
+            
+            idx = labels[instr.label]
+        
+        idx = idx + 1
+
+    return undefined
+
+function evalExpr(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
+    if expr.kind == "VAR"
+        return evalVar(expr, env, rootdir, curdir)
+    
+    else if expr.kind == "LIST"
+        return evalList(expr, env, rootdir, curdir)
+        
+    else if expr.kind == "CALL"
+        return evalCall("EXPR", expr, env, rootdir, curdir)
+
+    else if expr is Literal or expr.kind == "NATIVE" or expr.kind == "PRG"
+        return expr
+        
+    Error(`Expression not valid`)
+
+function evalVar(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
+    if expr.name in env
+        if env[expr.name] == undefined
+            Error(`Variable accessed before assignment: ${expr.name}`)
+        
+        return env[expr.name]
+    
+    Error(`Nonexisting symbol: ${expr.name}`)
+    
+function evalList(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
+    return {kind: "LIST", args: expr.args.map(e => evalExpr(e, env, rootdir, curdir))}
+        
+function evalCall(type: "STMT" | "EXPR", expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
+    caller = expr.caller
+    if caller.kind != "PRG" and caller.kind != "NATIVE"
+        caller = evalExpr(caller, env, rootdir, curdir)
+    
+    if caller.kind == "PRG"
+        if caller.args.length != expr.args.length
+            Error(`Arity mismatch`)
+        
+        tmpdir = caller.curdir
+        if tmpdir is undefined
+            tmpdir = curdir
+            
+        result = run(caller, expr.args.map(e => evalExpr(e, env, rootdir, tmpdir)), rootdir)
+
+    else if caller.kind == "NATIVE"
+        result = caller.apply(expr.args.map(e => evalExpr(e, env, rootdir, curdir)), rootdir, curdir)
+
+    if type == "EXPR" and result == undefined
+        Error(`Function returned undefined result`)
+        
+    return result
+
+BUILTINS = (function() {
+    function pathSplit(path)
+        path = path.split("/")
+        name = path.pop()
+        return {path: path.join("/"), name: name}
+    }
+    
+    function getFile(path: string, rootdir: Dir, curdir: Dir, rec: string[]): File
+        if rec is undefined
+            rec = []
+        
+        if path in rec
+            Error(`Detected cyclic link`)
+        
+        args = path.split("/")
+        if args[0] == ""
+            file = rootdir
+            args.shift()
+        
+        else
+            file = curdir
+        
+        for a in args
+            if file.kind != "DIR" or not file.items.has(a)
+                Error(`Not a directory`)
+            
+            file = file.items.get(a)
+            
+            if file.kind == "LINK"
+                tmp = pathSplit(file.path)
+                file = getFile(file.path, rootdir, tmp, [...rec, tmp.path])
+            
+        return file
+    
+    function typeCheck(args: object[], types: string[]) {
+        for i in [0..(args.length - 1)]
+            if types[i] == "atom"
+                if not args[i] is Literal
+                    Error(`Not an atom`)
+            
+            if types[i] == "list"
+                if not args[i] is List
+                    Error(`Not a list`)
+            
+            if types[i] == "string"
+                if not args[i] is string
+                    Error(`Not a string`)
+    }
+
+    return {
+        "cons": {
+            kind: "NATIVE",
+            args: ["atom", "list"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+
+                return {kind: "LIST", args: [args[0], ...args[1]]};
+            }
+        },
+        "head": {
+            kind: "NATIVE",
+            args: ["list"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+
+                return args[0][0];
+            }
+        },
+        "tail": {
+            kind: "NATIVE",
+            args: ["list"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+
+                return {kind: "LIST", args: args[0][1..]};
+            }
+        },
+        "read": {
+            kind: "NATIVE",
+            args: ["atom"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind == "DATA"
+                    return item.value
+                
+                if item.kind == "LINK"
+                    tmp = pathSplit(item.path)
+
+                    return BUILTINS["read"].apply(item.path, rootdir, tmp.path)
+                
+                else if item.kind == "DIR"
+                    Error(`Can not read a directory`)
+            }
+        },
+        "write": {
+            kind: "NATIVE",
+            args: ["string", "string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind == "DATA"
+                    item.value = args[1]
+                    
+                if item.kind == "LINK"
+                    tmp = pathSplit(item.path)
+
+                    return BUILTINS["write"].apply([item.path, args[1]], rootdir, tmp.path)
+                    
+                else
+                    Error(`Can not write to a directory`)
+            }
+        },
+        "readlnk": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind != "LINK"
+                    Error(`Not a link`)
+                
+                return item.path
+            }
+        },
+        "writelnk": {
+            kind: "NATIVE",
+            args: ["string", "string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind != "LINK"
+                    Error(`Not a link`)
+                
+                item.path = args[1]
+            }
+        },
+        "mkdir": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                item = getFile(tmp.path, rootdir, curdir)
+                
+                if item.kind != "DIR"
+                    Error(`Not a directory`)
+                
+                if item.items.get(tmp.name)
+                    Error(`Name already exists`)
+                
+                item.items.set(tmp.name, {kind: "DIR", items: new Map<string, File>()})
+            }
+        },
+        "mkfile": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                item = getFile(tmp.path, rootdir, curdir)
+
+                if item.kind != "DIR"
+                    Error(`Not a directory`)
+                
+                if item.items.get(tmp.name)
+                    Error(`Name already exists`)
+                
+                item.items.set(tmp.name, {kind: "DATA", value: ""})
+            }
+        },
+        "mklink": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                item = getFile(tmp.path, rootdir, curdir)
+
+                if item.kind != "DIR"
+                    Error(`Not a directory`)
+                
+                if item.items.get(tmp.name)
+                    Error(`Name already exists`)
+                
+                item.items.set(tmp.name, {kind: "LINK", path: ""})
+            }
+        },
+        "delete": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                parent = getFile(tmp.path, rootdir, curdir)
+                parent.items.delete(tmp.name)
+            }
+        },
+        "exists": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                parent = getFile(tmp.path, rootdir, curdir)                
+
+                return parent.items.has(tmp.name)
+            }
+        },
+        "kind": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                item = getFile(args[0], rootdir, curdir)
+
+                return item.kind
+            }
+        },
+        "dir": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                if args[0] == "."
+                    dir = curdir
+                
+                else
+                    dir = getFile(args[0], rootdir, curdir)                
+                    if dir.kind != "DIR"
+                        Error(`Not a directory`)
+                    
+                list = []
+                for key in dir.items.keys()
+                    list.push(key)
+                
+                return {kind: "LIST", args: list}
+            }
+        },
+        "compls": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                return compilePrg(args[0], rootdir, curdir)
+            }
+        },
+        "complf": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                prg = BUILTINS["compls"].apply(BUILTINS["read"].apply([args[0]], rootdir, curdir), rootdir, getFile(tmp.path, rootdir, curdir))
+
+                return prg
+            }
+        }
+    }
+})()
+

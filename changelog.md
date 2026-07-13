@@ -1,4 +1,6 @@
-# Apr, 2026.
+#Symp changelog
+
+## Jul, 2026.
 
 * initial commit
-* throwing errors
+

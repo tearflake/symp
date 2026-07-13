@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<!--?xml version="1.0"?-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+<title>Symp Playground</title>
+<link rel="icon" type="image/png" href="./icon-256.png"/>
+<link rel="icon" type="image/png" href=""/>
+
+<style type="text/css" media="screen">
+    /*
+    @font-face {
+        font-family: 'Fira';
+        src: url('FiraCode-Regular.ttf');
+    }
+    */
+
+
+    html, body
+    {
+        height: 100%;
+        width: 100%;
+        /*margin-top: 0px;
+        margin-left: 0px;*/
+        background-color: white;
+        padding:0;margin:0;
+    }
+    
+    body {
+        overflow: hidden;
+        filter: invert(0);
+    }
+
+    #RLset1 {
+        position:relative;
+        width: 100%;
+        height: 100%;
+    }
+    #input1 {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+    #output1 {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+    #nodes1 {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+    
+    #title  {color: #555555;}
+    #foot   {color: #000000;}
+    #all    {border-radius: 0px; border-spacing: 0px; border:0px solid #555555; color:#EEEEEE; background-color:#555555;}
+    #top    {border-radius: 0px 0px 0px 0px; border-spacing: 0px; border:0px; color:rgb(255,255,255); background-color:rgb(0,0,0);}
+    #bot    {border-radius: 0px 0px 0px 0px; border-spacing: 0px; border:0px; color:rgb(255,255,255); background-color:rgb(0,0,0);}
+    #bot1    {border-radius: 0px 0px 0px 0px; border-spacing: 0px; border:0px; color:rgb(0,0,0); background-color:rgb(255,255,255);}
+    #none   {border-radius: 0px 0px 0px 0px; color:#EEEEEE; background-color:#555555;}
+    #in     {border:0px solid #555555; border-spacing: 0px; color:#EEEEEE; background-color:rgba(0,0,0,0);}
+    #dark   {border-spacing: 0px; border-left: 1px solid #4466DD; border-right: 1px solid #4466DD; border-bottom: 1px solid #4466DD; color:#DDEEFF; background-color:#334488;}
+
+    .dropdown-content {
+      border: 3px solid rgb(0,0,0);
+      margin-top: 0.25em;
+        /*
+      margin: 10px;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      border: 3px solid rgb(0,0,0);
+      padding: 3px;
+      border-radius: 0px;
+      display: block;
+
+      background-color: rgb(255,255,255);
+      overflow-y: auto;
+      z-index: 65525;
+      font-size: 0.8em;
+      */
+      height: calc(100vh - 189px);
+      overflow: auto;
+    }
+
+    .dropdown-content a {
+      text-align: left;
+      text-decoration: none;
+      display: block;
+      padding-left: 0.25em;
+        /*
+      text-align: left;
+      color: rgb(0,0,0);
+      padding: 4px 2px;
+      padding-right: 20px;
+      text-decoration: none;
+      display: block;
+      font-weight: normal;
+      font-size: 14px;
+      */
+    }
+
+    .dropdown-content div {
+      text-align: left;
+      display: block;
+      /*padding-left: 0.25em;*/
+        /*
+      text-align: left;
+      color: rgb(0,0,0);
+      padding: 2px 2px;
+      padding-right: 10px;
+      text-decoration: none;
+      display: block;
+      font-size: 14px;
+      */
+    }
+    
+    .droplbl {
+        padding-top: 0.75em;
+        padding-bottom: 0.25em;
+    }
+
+    
+    .dropdown-content a:hover {background-color:rgb(0,0,0); color:rgb(255,255,255);}
+    .dropdown-content a:active {color:rgb(0,0,0); background-color:rgb(255,255,255);}
+    
+    .button a {
+        border: 3px solid rgb(0,0,0);
+        color: rgb(0,0,0);
+        background-color: rgb(255,255,255);
+    }
+    
+    .button a:hover {
+        color: rgb(255,255,255);
+        background-color: rgb(0,0,0);
+    }
+
+    .button a:active {
+        color: rgb(0,0,0);
+        background-color: rgb(255,255,255);
+    }
+
+    .wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+    }
+    
+    .scene {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        filter: 
+            url("#pixelate");
+    }
+
+    .overlay {
+        pointer-events: none;
+        z-index: 3;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        backdrop-filter: 
+            /*brightness(0.7)*/
+            grayscale(1)
+            contrast(1000000000000%)
+            invert(0.2)
+            brightness(1.1);
+            
+            
+    }
+body::selection {
+        background-color: white;
+        color: black;
+    }
+
+</style>
+</head>
+<body style="font-family: monospace; font-size: 1.269230769em;/*Times New Roman, Georgia, Garamond;*/">
+
+<script src="edit.js"></script>
+<script src="examples.js"></script>
+<script src="../symp.js"></script>
+
+<div class="overlay"></div>
+<div id="pix" class="scene">
+<div id="wrapper" class="wrapper" style="border: 1.5em solid rgba(0,0,0,0);">
+<table id="tbl" width="100%" height="100%" align="center" valign="middle" cellspacing="0" cellpadding="0" border="0">
+<tbody>
+<tr>
+<td class="exRound" id="top" cellpadding="10" align="center" valign="middle" height="30">
+<font style="font-family: sans-serif; font-size:2.25em"><strong>Symp Playground</strong></font>
+</td>
+</tr>
+<tr>
+<td id="in">
+    <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0" style="background-color:rgb(255,255,255); padding-top: 0.1em;">
+        <tbody><tr height="100%">
+        <td width="100%">
+        <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0" style="padding-top: 0.2em;">
+        <tbody>
+        <tr height="100%">
+        <td width="21%" style="width: 10em; padding-left: 0.7em; /*border: 0.2em solid black;*/ vertical-align: top;">
+<div id="drpdwncntnt" class="dropdown-content" style="font-family: sans-serif; font-size: 2em; color: black; /*line-height: 120%;*/">
+<nobr>
+        
+<div class="droplbltop" style="padding-bottom: 0.5em; font-size: 0.9em;"><b>intro examples:</b></div>
+
+        <a href="javascript:populate('frit-frut');   ">1. args and vars</a>
+        <a href="javascript:populate('foo-bar');     ">2. control flow</a>
+        <a href="javascript:populate('reverse');     ">3. loops</a>
+        <a href="javascript:populate('tree');        ">4. recursion</a>
+        <a href="javascript:populate('even-odd');    ">5. interaction</a>
+        <a href="javascript:populate('unary');       ">6. combining</a>
+        <a href="javascript:populate('sierp');       ">7. fun section</a>
+
+</nobr>
+</div>
+        </td>
+        <td width="50%" style="padding-left: 0.7em;">
+            <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0">
+            <tbody><tr>
+             <td class="exRound" id="top" valign="middle" width="100%" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255);">
+                <font style="font-family: sans-serif; font-size: 1.75em">
+                <b>
+                  input:
+                </b>
+                </font>
+             </td>
+            </tr>
+            <tr height="100%">
+             <!-- style="margin-top:-8px;"-->
+             <td class="exRound" id="in" valign="top" width="100%" style="filter: brightness(2); background-color: rgb(0,0,0); padding:0; border: 0.2em solid black;">
+                <div id="rules" class="container"  width="100%" style="position: relative; width: 100%; height: 100%;">
+                </div>
+                <script>
+                    var caretOn = true;
+                    var caretVisible = true;
+
+                    var options = {
+                        font: "2em monospace",
+                        tabWidth: 2,
+                        colorCaret: "rgb(0,0,0,0)",
+                        colorText: "rgb(255,255,255)",
+                        colorTextBack: "rgb(0,0,0)",
+                        colorSelection: "rgb(0,0,0)",
+                        colorSelectionBack: "rgb(255,255,255)",
+                        readOnly: false
+                    }
+                    
+                    var input1 = edit ("rules", options);
+
+                    document.addEventListener('selectionchange', function(e) {
+                        var pos = getCoords(input1.getValue(), input1.getSelectionStart());
+                        document.getElementById('lblGrammarCaret').innerHTML = "(" + pos.row + ", " + pos.column + ")";
+                    });
+                </script>
+             </td>
+            </tr>
+            <tr>
+              <td class="exRound" id="bot1" align="right" style="filter: brightness(2); height: 0em; color: rgb(255,255,255); background-color: rgb(0,0,0); font-family: monospace; font-size:2em; padding: 0;  border-top: 0.1em solid white;">
+                <span id="lblGrammarCaret">(1, 1)</span>
+              </td>
+            </tr>
+            </tbody></table>
+        </td>
+        <td width="29%" height="100%" style="padding-left: 0.7em; padding-right: 0.7em;">
+            <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0" style="padding-top: 0px;">
+            <tbody><tr>
+             <td class="exRound" id="top" valign="middle" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255); white-space: nowrap; overflow: hidden; max-width: 0vw;">
+                <font style="font-family: sans-serif; font-size: 1.75em; line-height: 100%;">
+                <span class="button">
+                  <b>output:</b>
+                    <a id="bck1" onclick="process()" href="javascript:" style="text-decoration: none;">
+                    <span style="padding-left: 1em; padding-right: 1em;">
+                    <b>process</b>
+                    </span>
+                    </a>
+                </b>
+                </font>
+             </td>
+            </tr>
+            <tr height="100%">
+             <td class="exRound" id="out" style="border-radius: 0px 0px 0px 0px; border:0.2em solid black;">
+                <div id="output" class="container"  width="100%" style="position: relative; width: 100%; height: 100%;">
+                </div>
+                <script>
+                    var caretOn = true;
+                    var caretVisible = true;
+
+                    var options = {
+                        font: "2em monospace",
+                        tabWidth: 4,
+                        colorCaret: "rgb(0,0,0,0)",
+                        colorText: "rgb(255,255,255)",
+                        colorTextBack: "rgb(0,0,0)",
+                        colorSelection: "rgb(0,0,0)",
+                        colorSelectionBack: "rgb(255,255,255)",
+                        readOnly: true
+                    }
+                    
+                    var output1 = edit ("output", options);
+                </script>
+             </td>
+            </tr>
+            </tbody></table>
+        </td>
+        </tr>
+        </tbody>
+        </table>
+        </tr>
+    </tbody></table>
+</td>
+</tr>
+<tr>
+ <td id="bot1" valign="middle" height="5">
+    <table width="100%" height="100%" style="padding-top: 0.75em; padding-bottom: 0.75em; padding-right: 1em">
+    <tr>
+        <td align="left">
+        </td>
+        <td align="right">
+            <font style="font-family: sans-serif; font-size: 1.75em;">
+                <span class="button">
+                <a id="bck2" href="https://github.com/tearflake" target="new" style="text-decoration: none;">
+                <span style="padding-left: 1em; padding-right: 1em;">
+                <b>visit me on GitHub</b>
+                </span>
+                </a>
+                </span>
+            </font>
+        </td>
+    </tr>
+    </table>
+ </td>
+</tr>
+</tbody>
+</table>
+
+<svg width="0" height="0">
+  <filter id="pixelate">
+    <feFlood id="feflood" x="0" y="0" width="1" height="1"/>
+    <feBlend id="feblend" width="3" height="3"/>
+    <feTile/>
+    <feComposite in="SourceGraphic" operator="in"/>
+    <feMorphology id="dilate" operator="dilate" radius="1"/>
+  </filter>
+</svg>
+<script>
+    let globalMagn = 1;
+    function getRaster (quant, color1, color2) {
+        var cnv = document.createElement ("canvas");
+        var pr = Math.min (window.devicePixelRatio, 3);
+        var ps = Math.round (quant / 100 * 4 * Math.max (screen.width, 1920) / 1920);
+        
+        if (ps < pr)
+            ps = pr;
+        
+        ps = 3;
+        
+        cnv.width = ps * 2;
+        cnv.height = ps * 2;
+        var ctx = cnv.getContext('2d');
+        ctx.fillStyle = "rgb(255,255,255)";
+        ctx.fillStyle = color1;
+        ctx.fillRect (0, 0, ps, ps);
+        ctx.fillRect (ps, ps, ps, ps);
+        ctx.fillStyle = "rgb(0,0,0)";
+        ctx.fillStyle = color2;
+        ctx.fillRect (0, ps, ps, ps);
+        ctx.fillRect (ps, 0, ps, ps);
+        
+        var img = document.createElement ("img");
+        img.src = cnv.toDataURL('image/png');
+        
+        return img;
+    }
+    
+    var img = getRaster (75, "rgb(0,0,0)", "rgb(255,255,255)");
+    document.getElementById ("wrapper").style.background = "url('" + img.src + "') top left repeat";
+
+    function getCoords (text, offset) {
+        var i, ch, row = 1, col = 1;
+        if (text.length > 0)
+            for (i = 0; i < offset; i += 1) {
+                ch = text.charCodeAt(i);
+                if (ch === 13 || ch === 10) {
+                    if (ch === 13 && text.charCodeAt (i + 1) === 10)
+                        i += 1;
+
+                    row += 1;
+                    col = 1;
+                    
+                } else
+                  col += 1;
+            }
+        
+        return {row: row, column: col};
+    }
+
+    function populate (param) {
+        input1.setValue (examples[param]);
+        output1.setValue ("");
+            
+        //output1.value = "";
+        //document.getElementById("tm").innerHTML = "";
+        setTimeout(function() {
+            input1.setSelectionStart (0);
+            input1.setSelectionEnd (0);
+            output1.selectionStart = 0;
+            output1.selectionEnd = 0;
+            input1.setFocus ();
+        }, 0);
+    }
+
+    window.onload = () => {
+        populate ('frit-frut');
+    }
+</script>
+
+<script>
+    function process () {
+        output1.setValue ("// under construction //");
+        /*
+        output1.value = "";
+        //document.getElementById("tm").innerHTML = "(parsing dp-expr...)";
+        setTimeout (function (){
+            var tm = Date.now ();
+            try {
+                output1.wrap = "off";
+                var output = QDBP.compile (input1.getValue ());
+            
+                output = SExpr.parse (output);
+                if (output.err) {
+                    output1.value = "parsing:\n" + output.err + " at " + "(" + (output.pos.y + 1) + ", " + (output.pos.x + 1) + ")";
+                    document.getElementById("tm").innerHTML = "";
+                } else {
+                    var sparsed = (Date.now () - tm)
+                    //document.getElementById("tm").innerHTML = "(converting dp-expr to s-expr took " + sparsed + "ms)";
+                    output1.setValue (SExpr.stringify (output));
+                }
+            }
+            catch(e) {
+                output1.setValue (e.name + ":\n" + e.message);
+            }
+            //output1.selectionStart = 0;
+            //output1.selectionEnd = 0;
+        }, 0);
+        */
+    }
+</script>
+<script>
+    function rezoom() {
+        document.getElementById ("pix").style.zoom = 1 / window.devicePixelRatio;
+    }
+
+    window.addEventListener('resize', rezoom)
+    rezoom();
+</script>
+</div>
+</div>
+</div>
+<script>
+    var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    var isEpiphany = /Epiphany/.test(navigator.userAgent) && /AppleWebKit/.test(navigator.userAgent);
+    if (isFirefox) {
+        document.body.innerHTML = "Firefox browser not supported for the playground."
+    }
+    if (isSafari) {
+        document.body.innerHTML = "Safari browser not supported for the playground."
+    }
+    if (isEpiphany) {
+        document.body.innerHTML = "Epiphany browser not supported for the playground."
+    }
+</script>
+</body>
+</html>
+

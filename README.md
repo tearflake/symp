@@ -2,5 +2,7 @@
 
 S-Expression based symbolic processing framework
 
-[Playground](https://symbolverse.github.io/symp/playground)
+* [introduction](./docs/introduction.md)
+* [specification](./specs/prg.pseudo)
+* [playground](./playground/)
 
