@@ -1,9 +1,0 @@
-<start> := (MODULE (PUBLIC <id-proc>*)? (PRIVATE <id-proc>*)? (DESCENDS <id-mod>*)?)
-
-<id-proc> := (ID <ATOMIC> <code-or-data>)
-
-<code-or-data> := <assembly>
-                | <ANY>
-
-<id-mod> := (ID <ATOMIC> <start>)
-
