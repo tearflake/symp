@@ -1,6 +1,6 @@
 # Symp Introduction
 
-## Introduction
+## 1. About Symp
 
 Symp is a symbolic programming language built around the idea that programs should inhabit the same space as the data they manipulate. Rather than separating source files, modules, configuration, and runtime resources into distinct concepts, Symp represents all of them as nodes within a mutable virtual filesystem. Programs are compiled directly from files in this filesystem, may reference neighboring files through relative paths, and may freely inspect and modify the filesystem during execution.
 
@@ -8,7 +8,7 @@ The language is intentionally small. It provides only a handful of primitive exp
 
 This document first introduces the theoretical foundations of Symp and its execution model. It then presents the concrete syntax and semantics of the language before demonstrating its use through a collection of progressively more advanced examples.
 
-## Theoretical Background
+## 2. Theoretical Background
 
 The central abstraction in Symp is the virtual filesystem. Every program executes within a directory hierarchy consisting of directories, data files, and symbolic links. Source code is stored as ordinary data files and becomes executable only after being compiled. Since compiled procedures remember the directory from which they originated, programs naturally execute relative to their own location, allowing software to be organized into reusable directory hierarchies.
 
@@ -16,7 +16,7 @@ Unlike conventional languages, Symp does not distinguish sharply between code an
 
 Execution follows a straightforward procedural model. Each procedure owns a local environment containing its arguments and variables. Instructions are executed sequentially unless modified by explicit jump operations. Procedures communicate exclusively through argument passing and return values, while persistent state is maintained inside the virtual filesystem.
 
-### Syntax
+### 2.1. Formal Syntax
 
 The filesystem itself is represented as a tree of directories containing named files. Each directory may contain arbitrary numbers of data files, symbolic links, and nested directories. Data files store arbitrary strings, while links store paths pointing to other filesystem objects.
 
@@ -55,7 +55,7 @@ Programs are themselves stored as textual data files using a symbolic S-expressi
 
 The S-expression notation is chosen primarily because it mirrors the internal representation used by the interpreter. Programs therefore require almost no syntactic transformation before execution, making the language particularly suitable for symbolic manipulation and program generation.
 
-### Semantics
+### 2.2. Informal Semantics
 
 Program execution begins by compiling a designated entry procedure and invoking it with the supplied arguments. Each invocation creates a fresh local environment containing the declared arguments and variables. Arguments are initialized from the caller, whereas variables are initially undefined and must be assigned before they are read.
 
@@ -65,7 +65,7 @@ Instruction execution is imperative. Assignments modify local variables, procedu
 
 All persistent state resides within the virtual filesystem. Builtin procedures provide operations for creating, deleting, reading, writing, and traversing filesystem objects. Since procedures retain the directory in which they were compiled, relative path resolution remains stable regardless of where a procedure is invoked.
 
-## Practical Examples
+## 3. Practical Examples
 
 The following examples introduce the language through a series of increasingly sophisticated programs. Each example focuses on a single concept while building upon the mechanisms introduced previously. Together they illustrate how symbolic expressions, procedure calls, recursion, and filesystem organization combine to form practical Symp programs.
 
