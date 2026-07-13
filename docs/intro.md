@@ -1,5 +1,7 @@
 # Symp Introduction
 
+Symp is a lightweight symbolic programming language whose primary abstraction is a mutable virtual filesystem. Programs, data, and references are represented uniformly as filesystem objects, enabling dynamic compilation, modular organization, and symbolic computation within a single execution model.
+
 ## 1. About Symp
 
 Symp is a symbolic programming language built around the idea that programs should inhabit the same space as the data they manipulate. Rather than separating source files, modules, configuration, and runtime resources into distinct concepts, Symp represents all of them as nodes within a mutable virtual filesystem. Programs are compiled directly from files in this filesystem, may reference neighboring files through relative paths, and may freely inspect and modify the filesystem during execution.
