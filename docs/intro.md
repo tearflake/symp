@@ -25,11 +25,11 @@ The following grammar describes the serialized representation of a filesystem hi
 ```
 <start> := <dir>
 
-<dir> := (DIR <items>+)
+<dir> := (DIR <item>+)
 
-<items> := (DATA <string> <string>)
-         | (LINK <string> <string>)
-         | <dir>
+<item> := (DATA <string> <string>)
+        | (LINK <string> <string>)
+        | <dir>
 ```
 
 Programs are themselves stored as textual data files using a symbolic S-expression syntax. A program consists of optional argument and variable declarations followed by a sequence of instructions executed from top to bottom. Expressions may consist of literals, variables, lists, or procedure calls.
@@ -69,7 +69,7 @@ All persistent state resides within the virtual filesystem. Builtin procedures p
 
 The following examples introduce the language through a series of increasingly sophisticated programs. Each example focuses on a single concept while building upon the mechanisms introduced previously. Together they illustrate how symbolic expressions, procedure calls, recursion, and filesystem organization combine to form practical Symp programs.
 
-#### Arguments and Variables
+### Arguments and Variables
 
 Every procedure may declare a list of formal arguments and a collection of local variables. Arguments receive their values from the caller when the procedure is invoked, whereas variables provide mutable storage local to a single execution of the procedure.
 
@@ -108,7 +108,7 @@ In this example, the procedure `FritFrut` accepts a single argument, constructs 
 ("Frit" "and" "Frut")
 ```
 
-#### Control Flow
+### Control Flow
 
 Procedures execute sequentially unless the instruction pointer is redirected by an explicit jump instruction. Conditional jumps compare two evaluated expressions and transfer execution to a labeled instruction only when the comparison succeeds. This mechanism forms the basis for implementing conditional logic.
 
@@ -156,7 +156,7 @@ The following procedure distinguishes between two possible input values and retu
 "alpha"
 ```
 
-#### Loops
+### Loops
 
 Although Symp does not provide dedicated looping constructs, iteration is easily expressed through labels and unconditional jumps. A procedure repeatedly executes a block of instructions until a terminating condition redirects control to the exit label.
 
@@ -202,7 +202,7 @@ This example traverses a symbolic list element by element. The procedure repeate
 (List 4 3 2 1)
 ```
 
-#### Recursion
+### Recursion
 
 Since procedures are ordinary values, they may compile and invoke themselves recursively. Recursive procedures are often a natural way to process hierarchical symbolic data, particularly tree-like structures.
 
@@ -268,7 +268,7 @@ The following example recursively transforms a linear sequence of control symbol
         (LIST "tree" "leaf" "leaf")))
 ```
 
-#### Process Interaction
+### Process Interaction
 
 Independent procedures may cooperate simply by compiling and invoking one another. Because procedures are loaded dynamically from the virtual filesystem, mutually recursive definitions require no special language support beyond ordinary procedure calls.
 
@@ -339,7 +339,7 @@ The following example implements mutually recursive predicates for determining w
 true
 ```
 
-#### Combining Directories
+### Combining Directories
 
 One of Symp's distinguishing features is that directory structure naturally serves as the organizational structure of a software system. Related procedures can be grouped into directories, and relative path resolution allows each procedure to locate neighboring components without requiring a separate module or package system.
 

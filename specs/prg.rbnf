@@ -1,0 +1,17 @@
+<start> := (PRG (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
+
+<instr> := (LABEL <identifier>)
+         | (ASGN <identifier> <expr>)
+         | (JMP <identifier>)
+         | (JMPNE <expr> <expr> <identifier>)
+         | (JMPEQ <expr> <expr> <identifier>)
+         | (RETURN <expr>)
+         | <call>
+
+<call> := (CALL <expr> <expr>*)
+
+<expr> := <identifier>
+        | <literal>
+        | (LIST <expr>*)
+        | <call>
+

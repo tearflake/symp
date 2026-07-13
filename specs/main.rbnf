@@ -1,0 +1,8 @@
+<start> := <dir>
+
+<dir> := (DIR <item>+)
+
+<item> := (DATA <string> <string>)
+        | (LINK <string> <string>)
+        | <dir>
+
