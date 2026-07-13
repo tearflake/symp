@@ -440,3 +440,13 @@ In this example, a directory named Unary forms a small arithmetic library implem
     "zero")
 ```
 
+## 4. Conclusion
+
+Symp demonstrates how a small procedural language can be combined with a mutable virtual filesystem to form a uniform symbolic computing environment. By representing programs, data, directories, and references as filesystem objects, the language eliminates the traditional distinction between code and its surrounding resources. Procedures may be compiled dynamically, passed as values, and organized according to the same directory hierarchy that stores ordinary data.
+
+Although the language provides only a modest collection of primitive instructions and builtin operations, these constructs are sufficient to express common programming techniques such as conditional execution, iteration, recursion, higher-order procedure invocation, and modular program organization. The examples presented throughout this introduction illustrate how increasingly sophisticated behavior emerges from the composition of these simple mechanisms.
+
+The filesystem-centric design also encourages a modular style of development. Related procedures can be grouped into directories, reused through relative references, and composed into larger libraries without introducing separate language features for packages or modules. Since all interaction with persistent state occurs through the virtual filesystem, programs remain explicit about the resources they depend upon and manipulate.
+
+As a result, Symp serves both as a practical symbolic programming language and as an experimental platform for exploring alternative relationships between code, data, and storage. Its minimal core and uniform representation make it well suited for experimentation with symbolic computation, metaprogramming, program transformation, and other applications where programs themselves are treated as manipulable data.
+
