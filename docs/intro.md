@@ -27,11 +27,13 @@ The following grammar describes the serialized representation of a filesystem hi
 ```
 <start> := <dir>
 
-<dir> := (DIR <item>+)
+<dir> := (DIR <name> <item>+)
 
-<item> := (DATA <string> <string>)
-        | (LINK <string> <string>)
+<item> := (DATA <name> <string>)
+        | (LINK <name> <string>)
         | <dir>
+
+<name> := <string>
 ```
 
 Programs are themselves stored as textual data files using a symbolic S-expression syntax. A program consists of optional argument and variable declarations followed by a sequence of instructions executed from top to bottom. Expressions may consist of literals, variables, lists, or procedure calls.
