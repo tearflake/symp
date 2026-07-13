@@ -2,7 +2,7 @@
 
 S-Expression based symbolic processing framework
 
-* [introduction](./docs/introduction.md)
+* [introduction](./docs/intro.md)
 * [specification](./specs/prg.pseudo)
 * [playground](./playground/)
 
