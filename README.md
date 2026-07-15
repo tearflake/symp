@@ -18,7 +18,9 @@ The syntax and semantics of core Symp are inspired by S-expressions processed by
 
 Meta-programming capabilities of Symp arise from the fact that any program can take any form, provided we take care of its particular kinds of syntax and semantics. By freely expressing parsers, compilers, or interpreters in Symp, arbitrary forms of code may become seamless parts of programming code bases.
 
-In a certain sense, Symp Framework can be seen as a virtual OS, and shares some similarities with low level operating systems, only operating on higher level of use and appearance. Once enriched by higher level constructs, such system may deliver a user experience of having control over lower level constructs without getting down to bare metal assembly interface.
+Virtual filesystem holding code and data is an important part of Symp framework. When a code is read and compiled from this filesystem, it tracks its absolute path position. Relative to this position, the code accesses other code and data analogously to lexical scoping semantics. The virtual filesystem then becomes an integral part of Symp code, participating in program interpretation.
+
+In summary, virtual filesystem with meta-programming capabilities makes Symp an extensible foundation ready to host more complex kinds of programs with their interpretations. Once enriched by higher level constructs, the system may deliver a user experience of having control over lower level constructs without getting down to bare metal assembly interface. The level of final automation of programming activities is left completely up to the user requirements, and may occupy a range from very low and assembly like, to very high and mysterious levels of abstractions.
 
 ## Resources
 
