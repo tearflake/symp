@@ -16,7 +16,7 @@ The intention of Symp framework is to serve as a virtual machine and compiling t
 
 The syntax and semantics of core Symp programming are inspired by S-expressions processed by a kind of higher order assembly constructs where programs are passed as strings, possibly compiled (or interpreted) from user defined higher level frameworks. All the elements needed for such operations can be extruded from Symp.
 
-This framework is conceptualized in a way that it tries to easy up enriching the system by new programming frameworks. Because all the programs are stored as strings, such programs can take any form and shape, with arbitrary syntax and semantics, compiled to or interpreted by the base framework on demand during program execution.
+This system is conceptualized in a way that it tries to easy up enriching the system by new programming frameworks. Because all the programs are stored as strings, such programs can take any form and shape, with arbitrary syntax and semantics, compiled to or interpreted by the base framework on demand, during program execution.
 
 In a certain sense, Symp Framework can be seen as a virtual OS, and shares some similarities with low level operating systems, only operating on higher level of use and appearance. Once enriched by higher level constructs, such system delivers a user experience of having control over lower level constructs without getting down to bare metal assembly interface.
 
