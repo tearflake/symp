@@ -8,7 +8,7 @@
 
 ## About
 
-This assembly-like programming framework is based on S-expressions for expressing structures holding code and data. Code and data are spanned over virtual directories and files, and are wired into the code execution model which natively accesses the virtual filesystem. This virtual filesystem makes no distinction between code and data, making a strong case for meta-programming. The framework emphasizes possibility of extending the system by new programming constructs, providing all the necessary mechanics for such activities.
+This programming framework is based on S-expressions for expressing structures holding code and data. Code and data are spanned over virtual directories and files, and are wired into the code execution model which natively accesses the virtual filesystem. The virtual filesystem makes no distinction between code and data, making a strong case for meta-programming. Although starting from assembly-like core, the framework emphasizes possibility of extending the system by new programming constructs, providing all the necessary mechanics for such activities. Thus, completely arbitrary code syntaxes and semantic forms can be extruded on top of these foundations.
 
 ## Details
 
