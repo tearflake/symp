@@ -18,7 +18,7 @@ The syntax and semantics of core Symp are inspired by S-expressions processed by
 
 Meta-programming capabilities of Symp arise from the fact that any program can take any form, provided we take care of its particular kinds of syntax and semantics. By freely expressing parsers, compilers, or interpreters in Symp, arbitrary forms of code may become seamless parts of programming code bases.
 
-In a certain sense, Symp Framework can be seen as a virtual OS, and shares some similarities with low level operating systems, only operating on higher level of use and appearance. Once enriched by higher level constructs, such system delivers a user experience of having control over lower level constructs without getting down to bare metal assembly interface.
+In a certain sense, Symp Framework can be seen as a virtual OS, and shares some similarities with low level operating systems, only operating on higher level of use and appearance. Once enriched by higher level constructs, such system may deliver a user experience of having control over lower level constructs without getting down to bare metal assembly interface.
 
 ## Resources
 
