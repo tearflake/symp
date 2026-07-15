@@ -14,7 +14,7 @@ This programming framework is based on S-expressions for expressing structures h
 
 Symp is an embodiment of a virtual filesystem hosting mutable code and data that can interact with each other. Although rather unusual, it represents a computationally complete meta-programming framework in its essence.
 
-The main intention of Symp framework is to serve as a virtual machine and compiling target from embedded higher level programming frameworks. It syntax and semantics are very simple, making it more-or-less trivial for implementation as interpreter or compiler.
+The main intention of Symp framework is to serve as a virtual machine and compiling target from embedded higher level programming frameworks. Its syntax and semantics are very simple, making it more-or-less trivial for implementation as interpreter or compiler.
 
 The syntax and semantics of core Symp are inspired by S-expressions processed by a kind of higher order assembly constructs where programs are passed as strings, and compiled on demand during program execution. Such an approach makes meta-programming a natural use case of Symp.
 
