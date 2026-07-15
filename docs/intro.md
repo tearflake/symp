@@ -88,7 +88,7 @@ In this example, the procedure `FritFrut` accepts a single argument, constructs 
     (PRG
       (RETURN
         (CALL
-          (CALL complf "FritFrut") 
+          (CALL cfile "FritFrut") 
           "and")))
     """)
   
@@ -127,7 +127,7 @@ The following procedure distinguishes between two possible input values and retu
     (PRG
       (RETURN
         (CALL
-          (CALL complf "FooBar")
+          (CALL cfile "FooBar")
           "foo")))
     """)
 
@@ -175,7 +175,7 @@ This example traverses a symbolic list element by element. The procedure repeate
     (PRG
       (RETURN
         (CALL
-          (CALL complf "ReverseList")
+          (CALL cfile "ReverseList")
           (LIST 1 2 3 4))))
     """)
 
@@ -221,7 +221,7 @@ The following example recursively transforms a linear sequence of control symbol
     (PRG
       (RETURN
         (CALL
-          (CALL complf "Tree")
+          (CALL cfile "Tree")
           (LIST
             "branch"
             "branch"
@@ -235,7 +235,7 @@ The following example recursively transforms a linear sequence of control symbol
       (ARGS n)
       (VARS tree)
       
-      (ASGN tree (CALL complf "Tree"))
+      (ASGN tree (CALL cfile "Tree"))
       
       (JMPEQ
         (head n)
@@ -287,7 +287,7 @@ The following example implements mutually recursive predicates for determining w
     (PRG
       (RETURN
         (CALL
-          (CALL complf "IsEven")
+          (CALL cfile "IsEven")
           (LIST
             "succ"
             "succ"
@@ -309,7 +309,7 @@ The following example implements mutually recursive predicates for determining w
       (RETURN TRUE)
       
       (LABEL odd)
-      (ASGN isOdd (CALL complf "IsOdd"))
+      (ASGN isOdd (CALL cfile "IsOdd"))
       (RETURN
         (CALL isOdd
           (CALL tail arg))))
@@ -330,7 +330,7 @@ The following example implements mutually recursive predicates for determining w
       (RETURN FALSE)
       
       (LABEL even)
-      (ASGN isEven (CALL complf "IsEven"))
+      (ASGN isEven (CALL cfile "IsEven"))
       (RETURN
         (CALL isEven
           (CALL tail arg))))
@@ -358,7 +358,7 @@ In this example, a directory named Unary forms a small arithmetic library implem
     (PRG
       (RETURN
         (CALL
-          (CALL complf "Unary/Mul")
+          (CALL cfile "Unary/Mul")
           (LIST
             "succ"
             "succ"
@@ -388,7 +388,7 @@ In this example, a directory named Unary forms a small arithmetic library implem
         (ARGS a b)
         (VARS inc, acc)
         
-        (ASGN inc (CALL complf "Inc"))
+        (ASGN inc (CALL cfile "Inc"))
         (ASGN acc b)
         
         (LABEL loop)
@@ -412,7 +412,7 @@ In this example, a directory named Unary forms a small arithmetic library implem
         (ARGS a b)
         (VARS add, acc)
         
-        (ASGN add (CALL complf "Add"))
+        (ASGN add (CALL cfile "Add"))
         (ASGN acc (LIST "zero"))
         
         (LABEL loop)

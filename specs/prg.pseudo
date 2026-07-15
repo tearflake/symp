@@ -44,7 +44,7 @@ function main(args: Expr[], root: Dir): Expr
     return evalExpr({
         kind: "CALL",
         type: "STMT",
-        caller: BUILTINS["complf"].apply(["main"], root, root)
+        caller: BUILTINS["cfile"].apply(["main"], root, root)
         args: args
     }, root, root)
 
@@ -405,7 +405,7 @@ BUILTINS = (function() {
                 return {kind: "LIST", args: list}
             }
         },
-        "compls": {
+        "cstr": {
             kind: "NATIVE",
             args: ["string"],
             apply: (args, rootdir, curdir) => {
@@ -414,14 +414,14 @@ BUILTINS = (function() {
                 return compilePrg(args[0], rootdir, curdir)
             }
         },
-        "complf": {
+        "cfile": {
             kind: "NATIVE",
             args: ["string"],
             apply: (args, rootdir, curdir) => {
                 typeCheck(args, this.args)
                 
                 tmp = pathSplit(args[0])
-                prg = BUILTINS["compls"].apply(BUILTINS["read"].apply([args[0]], rootdir, curdir), rootdir, getFile(tmp.path, rootdir, curdir))
+                prg = BUILTINS["cstr"].apply(BUILTINS["read"].apply([args[0]], rootdir, curdir), rootdir, getFile(tmp.path, rootdir, curdir))
 
                 return prg
             }

@@ -7,7 +7,7 @@ examples = {
     (PRG
       (RETURN
         (CALL
-          (CALL complf "FritFrut") 
+          (CALL cfile "FritFrut") 
           "and")))
     """)
   
@@ -33,7 +33,7 @@ examples = {
     (PRG
       (RETURN
         (CALL
-          (CALL complf "FooBar")
+          (CALL cfile "FooBar")
           "foo")))
     """)
 
@@ -68,7 +68,7 @@ examples = {
     (PRG
       (RETURN
         (CALL
-          (CALL complf "ReverseList")
+          (CALL cfile "ReverseList")
           (LIST 1 2 3 4))))
     """)
 
@@ -78,7 +78,7 @@ examples = {
       (ARGS input)
       (VARS h t acc)
       
-      (ASGN acc ())
+      (ASGN acc (LIST))
       
       (LABEL loop)
       (JMPEQ (CALL head input) NIL done)
@@ -101,7 +101,7 @@ examples = {
     (PRG
       (RETURN
         (CALL
-          (CALL complf "Tree")
+          (CALL cfile "Tree")
           (LIST
             "branch"
             "branch"
@@ -115,7 +115,7 @@ examples = {
       (ARGS n)
       (VARS tree)
       
-      (ASGN tree (CALL complf "Tree"))
+      (ASGN tree (CALL cfile "Tree"))
       
       (JMPEQ
         (head n)
@@ -144,7 +144,7 @@ examples = {
     (PRG
       (RETURN
         (CALL
-          (CALL complf "IsEven")
+          (CALL cfile "IsEven")
           (LIST
             "succ"
             "succ"
@@ -166,7 +166,7 @@ examples = {
       (RETURN TRUE)
       
       (LABEL odd)
-      (ASGN isOdd (CALL complf "IsOdd"))
+      (ASGN isOdd (CALL cfile "IsOdd"))
       (RETURN
         (CALL isOdd
           (CALL tail arg))))
@@ -187,7 +187,7 @@ examples = {
       (RETURN FALSE)
       
       (LABEL even)
-      (ASGN isEven (CALL complf "IsEven"))
+      (ASGN isEven (CALL cfile "IsEven"))
       (RETURN
         (CALL isEven
           (CALL tail arg))))
@@ -202,7 +202,7 @@ examples = {
     (PRG
       (RETURN
         (CALL
-          (CALL complf "Unary/Mul")
+          (CALL cfile "Unary/Mul")
           (LIST
             "succ"
             "succ"
@@ -232,7 +232,7 @@ examples = {
         (ARGS a b)
         (VARS inc, acc)
         
-        (ASGN inc (CALL complf "Inc"))
+        (ASGN inc (CALL cfile "Inc"))
         (ASGN acc b)
         
         (LABEL loop)
@@ -256,7 +256,7 @@ examples = {
         (ARGS a b)
         (VARS add, acc)
         
-        (ASGN add (CALL complf "Add"))
+        (ASGN add (CALL cfile "Add"))
         (ASGN acc (LIST "zero"))
         
         (LABEL loop)
@@ -275,6 +275,147 @@ examples = {
       """)))
 `,
 
+"fun":
+`
+(DIR "Fun section"
+  (DATA "main"
+    """
+    (PRG
+      (VARS
+        createGrid
+        drawSpiral
+        gridToString
+        grid
+        size)
+      
+      (ASGN createGrid
+        (CALL cfile "Grid/Create"))
+      
+      (ASGN drawSpiral
+        (CALL cfile "DrawSpiral"))
+      
+      (ASGN gridToString
+        (CALL cfile "Grid/ToString"))
+      
+      (ASGN size 8)
+
+      (ASGN grid
+        (CALL createGrid
+          (CALL stdlib/mul size 4)
+          (CALL stdlib/mul size 2)))
+      
+      (CALL drawSpiral grid size)
+      
+      (RETURN
+        (CALL dev/stdout
+          (CALL gridToString grid))))
+    """)
+
+  (DIR Grid
+    (DATA "Create"
+      """
+      (PRG
+        (ARGS sizeX sizeY)
+        (VARS i j grid row)
+        
+        (ASGN grid (LIST))
+        (ASGN i 0)
+        (LABEL iBegin)
+        (JMPEQ sizeY i iEnd)
+
+        (ASGN row (LIST))
+        (ASGN j 0)
+        (LABEL jBegin)
+        (JMPEQ sizeX j jEnd)
+        (CALL "stdlib/append" row " ")
+        (ASGN j (CALL "stdlib/add" j 1))
+        (JMP jBegin)
+        (LABEL jEnd)
+        
+        (CALL "stdlib/append" grid row)
+        (ASGN i (CALL "stdlib/add" i 1))
+        (JMP iBegin)
+        (LABEL iEnd)
+        
+        (RETURN grid))
+      """)
+    
+    (DATA "Plot"
+      """
+      (PRG
+        (ARGS grid x y)
+        (VARS row)
+        
+        (ASGN row
+          (CALL "stdlib/getnth"
+            grid
+            y))
+          
+        (CALL "stdlib/replnth"
+          row
+          x
+          " "))
+        """)
+    
+    (DATA "ToString"
+      """
+      (PRG
+          (ARGS grid)
+          (VARS y x rows row)
+          
+          (ASGN rows "")
+          (ASGN y 0)
+          (LABEL yBegin)
+          (JMPEQ
+            (CALL "stdlib/length"
+              grid)
+            y
+            yEnd
+          )
+
+          (ASGN row "")
+          (ASGN gridRow
+            (CALL "stdlib/getnth"
+              grid
+              y)
+              
+          (ASGN x 0)
+          (LABEL xBegin)
+          (JMPEQ
+            (CALL "stdlib/length"
+              gridRow)
+            x
+            xEnd
+          )
+          (CALL "stdlib/append"
+            row
+            (CALL "stdlib/getnth"
+              gridRow
+              x))
+          (ASGN x
+            (CALL "stdlib/add"
+              x
+              1))
+          (JMP xBegin)
+          
+          (LABEL xEnd)
+          (CALL "stdlib/append"
+            rows
+            row)
+          (CALL "stdlib/append"
+            rows
+            "\\n")
+          (ASGN y
+            (CALL "stdlib/add"
+              y
+              1))
+          (JMP yBegin)
+          
+          (LABEL yEnd)
+          
+          (RETURN rows)))
+        """)))
+`,
 "factorial":
 `
 (MODULE
@@ -448,7 +589,7 @@ examples = {
               (JMP j1)
               (LABEL exitJ1)
               
-              (ASGN grid ())
+              (ASGN grid (LIST))
               (ASGN i 0)
               (LABEL i1)
               (JMPEQ (CALL stdlib/leq sizeY i) TRUE exitI1)
