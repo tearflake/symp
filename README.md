@@ -28,7 +28,7 @@ The syntax and semantics of core Symp are inspired by S-expressions processed by
 
 #### meta-programming
 
-Meta-programming capabilities of Symp arise from the fact that programs can take any form, provided we manage its particular kinds of syntax and semantics. By freely expressing parsers, compilers, or interpreters in low level Symp, arbitrary forms of code may become seamless parts of programming code bases.
+Meta-programming capabilities of Symp arise from the fact that programs can take any form, provided we manage on our own their particular kinds of syntax and semantics. By freely expressing parsers, compilers, or interpreters in low level Symp, arbitrary forms of code may become seamless parts of programming code bases.
 
 #### summary
 
