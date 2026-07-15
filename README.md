@@ -18,11 +18,11 @@ The main intention of Symp framework is to serve as a virtual machine and compil
 
 The syntax and semantics of core Symp are inspired by S-expressions processed by a kind of higher order assembly constructs where programs are passed as strings, and compiled on demand during program execution. Such an approach makes meta-programming a natural use case of Symp.
 
-Meta-programming capabilities of Symp arise from the fact that programs can take any form, provided we manage its particular kinds of syntax and semantics. By freely expressing parsers, compilers, or interpreters in Symp, arbitrary forms of code may become seamless parts of programming code bases.
+Meta-programming capabilities of Symp arise from the fact that programs can take any form, provided we manage its particular kinds of syntax and semantics. By freely expressing parsers, compilers, or interpreters in low level Symp, arbitrary forms of code may become seamless parts of programming code bases.
 
 Virtual filesystem holding code and data is an important part of Symp framework. When a code is read and compiled, relative to its position within the filesystem, parts of code access other parts of code and data analogously to lexical scoping semantics. The virtual filesystem thus becomes an integral part of Symp programs, participating in their organization and interpretation.
 
-In summary, virtual filesystem with meta-programming capabilities makes Symp an extensible foundation ready to host more complex kinds of programs and their interpretations. Once enriched by higher level constructs, the system may deliver a user experience of having control over lower level constructs without getting down to bare metal assembly interface. The final automation level of programming activities is left completely up to the user requirements, and may occupy a range from very low and assembly like, to very high and mysterious levels of abstractions.
+In summary, virtual filesystem with meta-programming capabilities makes Symp an extensible foundation ready to host more complex kinds of programs and their interpretations. Once enriched by higher level constructs, the system may deliver a user experience of having control over lower level constructs without getting down to bare metal assembly interface. The final automation level of programming activities is left completely up to the user requirements, and may occupy a range from very low and assembly like levels, to very high and mysterious levels of abstractions.
 
 ## Resources
 
