@@ -1,4 +1,4 @@
-<start> := (PRG (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
+<start> := (ASM (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
 
 <instr> := (LABEL <identifier>)
          | (ASGN <identifier> <expr>)

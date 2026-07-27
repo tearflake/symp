@@ -18,7 +18,7 @@ Var         : {kind: "VAR", name: string}
 
 Native      : {kind: "NATIVE", apply: (args: Expr[], rootdir: Dir, curdir: Dir) => Expr}
 
-Prg         : {kind: "PRG", args: string[], vars: string[], instr: Instr[], curdir: Dir}
+Prg         : {kind: "ASM", args: string[], vars: string[], instr: Instr[], curdir: Dir}
 Instr       : Lbl | Call | Asgn | Jne | Jeq | Jmp | Ret
 Lbl         : {kind: "LABEL", label: string}
 Asgn        : {kind: "ASGN", var: Var, value: Expr}
@@ -30,12 +30,12 @@ Ret         : {kind: "RETURN", value: Expr}
 
 File        : Dir | Data | Link
 Dir         : {kind: "DIR", items: Map<string, File>}
-Data        : {kind: "DATA", value: string}
+Data        : {kind: "FILE", value: string}
 Link        : {kind: "LINK", path: string}
 
 // Code implementation
 
-function compilePrg(code: string, rootdir: Dir, curdir: Dir): Prg
+function compileAsm(code: string, rootdir: Dir, curdir: Dir): Prg
 
 function main(args: Expr[], root: Dir): Expr
     if not root.items.has("main")
@@ -117,7 +117,7 @@ function evalExpr(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
     else if expr.kind == "CALL"
         return evalCall("EXPR", expr, env, rootdir, curdir)
 
-    else if expr is Literal or expr.kind == "NATIVE" or expr.kind == "PRG"
+    else if expr is Literal or expr.kind == "NATIVE" or expr.kind == "ASM"
         return expr
         
     Error(`Expression not valid`)
@@ -136,10 +136,10 @@ function evalList(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
         
 function evalCall(type: "STMT" | "EXPR", expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
     caller = expr.caller
-    if caller.kind != "PRG" and caller.kind != "NATIVE"
+    if caller.kind != "ASM" and caller.kind != "NATIVE"
         caller = evalExpr(caller, env, rootdir, curdir)
     
-    if caller.kind == "PRG"
+    if caller.kind == "ASM"
         if caller.args.length != expr.args.length
             Error(`Arity mismatch`)
         
@@ -241,7 +241,7 @@ BUILTINS = (function() {
                 typeCheck(args, this.args)
                 
                 item = getFile(args[0], rootdir, curdir)
-                if item.kind == "DATA"
+                if item.kind == "FILE"
                     return item.value
                 
                 if item.kind == "LINK"
@@ -260,7 +260,7 @@ BUILTINS = (function() {
                 typeCheck(args, this.args)
                 
                 item = getFile(args[0], rootdir, curdir)
-                if item.kind == "DATA"
+                if item.kind == "FILE"
                     item.value = args[1]
                     
                 if item.kind == "LINK"
@@ -331,7 +331,7 @@ BUILTINS = (function() {
                 if item.items.get(tmp.name)
                     Error(`Name already exists`)
                 
-                item.items.set(tmp.name, {kind: "DATA", value: ""})
+                item.items.set(tmp.name, {kind: "FILE", value: ""})
             }
         },
         "mklink": {
@@ -405,13 +405,13 @@ BUILTINS = (function() {
                 return {kind: "LIST", args: list}
             }
         },
-        "cstr": {
+        "csexpr": {
             kind: "NATIVE",
             args: ["string"],
             apply: (args, rootdir, curdir) => {
                 typeCheck(args, this.args)
                 
-                return compilePrg(args[0], rootdir, curdir)
+                return compileAsm(args[0], rootdir, curdir)
             }
         },
         "cfile": {
@@ -421,7 +421,7 @@ BUILTINS = (function() {
                 typeCheck(args, this.args)
                 
                 tmp = pathSplit(args[0])
-                prg = BUILTINS["cstr"].apply(BUILTINS["read"].apply([args[0]], rootdir, curdir), rootdir, getFile(tmp.path, rootdir, curdir))
+                prg = BUILTINS["csexpr"].apply(BUILTINS["read"].apply([args[0]], rootdir, curdir), rootdir, getFile(tmp.path, rootdir, curdir))
 
                 return prg
             }
