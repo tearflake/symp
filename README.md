@@ -39,7 +39,7 @@ In summary, virtual filesystem with meta-programming capabilities makes Symp an 
 While it is still in early development, there are several resources to check out regarding Symp virtual machine:
 
 * [introduction](./docs/intro.md)
-* [specification](./specs/prg.pseudo)
+* [specification](./specs/asm.pseudo)
 * [playground](./playground/)
 
 ```
