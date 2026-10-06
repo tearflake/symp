@@ -171,7 +171,7 @@ var Asm = (
                 }
                 else if (elem[0] === "CALL") {
                     let c = makeExpr (elem[1]);
-                    if (c.err) {
+                    if (c && c.err) {
                         c.path = [1, ...c.path];
                         return c;
                     }
@@ -179,7 +179,7 @@ var Asm = (
                     let a = [];
                     for (let i = 2; i < elem.length; i++) {
                         let ae = makeExpr(elem[i]);
-                        if (ae.err) {
+                        if (ae && ae.err) {
                             ae.path = [i, ...ae.path];
                             return aelem;
                         }
@@ -193,19 +193,19 @@ var Asm = (
                     let e = [];
                     for (let i = 1; i <= 2; i++) {
                         e[i] = makeExpr (elem[i]);
-                        if (e[i].err) {
+                        if (e[i] && e[i].err) {
                             e[i].path = [i, ...e[i].path];
                             return e[i];
                         }
                     }
                     
-                    graph.instrs.push ({kind: "ASGN", var: e[1], value: e[2]});
+                    graph.instrs.push ({kind: "ASGN", var: e[1].name, value: e[2]});
                 }
                 else if (elem[0] === "JMPNE") {
                     let e = [];
                     for (let i = 1; i <= 2; i++) {
                         e[i] = makeExpr (elem[i]);
-                        if (e[i].err) {
+                        if (e[i] && e[i].err) {
                             e[i].path = [i, ...e[i].path];
                             return e[i];
                         }
@@ -217,7 +217,7 @@ var Asm = (
                     let e = [];
                     for (let i = 1; i <= 2; i++) {
                         e[i] = makeExpr (elem[i]);
-                        if (e[i].err) {
+                        if (e[i] && e[i].err) {
                             e[i].path = [i, ...e[i].path];
                             return e[i];
                         }
@@ -232,7 +232,7 @@ var Asm = (
                     let e = [];
                     let i = 1;
                     e[i] = makeExpr (elem[i]);
-                    if (e[i].err) {
+                    if (e[i] && e[i].err) {
                         e[i].path = [i, ...e[i].path];
                         return e[i];
                     }
@@ -253,7 +253,7 @@ var Asm = (
                     let args = [];
                     for (let i = 1; i < sexpr.length; i++) {
                         let elem = makeExpr(sexpr[i]);
-                        if (elem.err) {
+                        if (elem && elem.err) {
                             elem.path = [i, ...elem.path];
                             return elem;
                         }
@@ -265,7 +265,7 @@ var Asm = (
                 }
                 else if (sexpr[0] === "CALL") {
                     let calling = makeExpr (sexpr[1]);
-                    if (calling.err) {
+                    if (calling && calling.err) {
                         calling.path = [1, ...calling.path];
                         return calling;
                     }
@@ -273,7 +273,7 @@ var Asm = (
                     let args = [];
                     for (let i = 2; i < sexpr.length; i++) {
                         let elem = makeExpr(sexpr[i]);
-                        if (elem.err) {
+                        if (elem && elem.err) {
                             elem.path = [i, ...elem.path];
                             return elem;
                         }
