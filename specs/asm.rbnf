@@ -6,6 +6,7 @@
          | (JMPNE <expr> <expr> <identifier>)
          | (JMPEQ <expr> <expr> <identifier>)
          | (RETURN <expr>)
+         | RETURN
          | <call>
 
 <call> := (CALL <expr> <expr>*)

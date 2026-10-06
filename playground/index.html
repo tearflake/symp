@@ -186,7 +186,7 @@ body::selection {
 
 </style>
 </head>
-<body style="font-family: monospace; font-size: 1.269230769em;/*Times New Roman, Georgia, Garamond;*/">
+<body style="font-family: monospace; font-size: /*1.692307692em*/1.269230769em;/*Times New Roman, Georgia, Garamond;*/">
 
 <script src="edit.js"></script>
 <script src="examples.js"></script>
@@ -210,24 +210,24 @@ body::selection {
         <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0" style="padding-top: 0.2em;">
         <tbody>
         <tr height="100%">
-        <td width="21%" style="width: 10em; padding-left: 0.7em; /*border: 0.2em solid black;*/ vertical-align: top;">
+        <td width="22%" style="width: 10em; padding-left: 0.7em; /*border: 0.2em solid black;*/ vertical-align: top;">
 <div id="drpdwncntnt" class="dropdown-content" style="font-family: sans-serif; font-size: 2em; color: black; /*line-height: 120%;*/">
 <nobr>
         
 <div class="droplbltop" style="padding-bottom: 0.5em; font-size: 0.9em;"><b>intro examples:</b></div>
 
-        <a href="javascript:populate('frit-frut');   ">1. args and vars</a>
-        <a href="javascript:populate('foo-bar');     ">2. control flow</a>
+        <a href="javascript:populate('greet');       ">1. args and vars</a>
+        <a href="javascript:populate('foo-bar');     ">2. branching</a>
         <a href="javascript:populate('reverse');     ">3. loops</a>
         <a href="javascript:populate('tree');        ">4. recursion</a>
         <a href="javascript:populate('even-odd');    ">5. interaction</a>
-        <a href="javascript:populate('unary');       ">6. combining</a>
+        <a href="javascript:populate('unary');       ">6. packaging</a>
         <a href="javascript:populate('fun');         ">7. fun section</a>
 
 </nobr>
 </div>
         </td>
-        <td width="50%" style="padding-left: 0.7em;">
+        <td width="48%" style="padding-left: 0.7em;">
             <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0">
             <tbody><tr>
              <td class="exRound" id="top" valign="middle" width="100%" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255);">
@@ -262,7 +262,7 @@ body::selection {
 
                     document.addEventListener('selectionchange', function(e) {
                         var pos = getCoords(input1.getValue(), input1.getSelectionStart());
-                        document.getElementById('lblGrammarCaret').innerHTML = "(" + pos.row + ", " + pos.column + ")";
+                        document.getElementById('lblGrammarCaret').innerHTML = "(" + pos.row + " " + pos.column + ")";
                     });
                 </script>
              </td>
@@ -274,7 +274,7 @@ body::selection {
             </tr>
             </tbody></table>
         </td>
-        <td width="29%" height="100%" style="padding-left: 0.7em; padding-right: 0.7em;">
+        <td width="30%" height="100%" style="padding-left: 0.7em; padding-right: 0.7em;">
             <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0" style="padding-top: 0px;">
             <tbody><tr>
              <td class="exRound" id="top" valign="middle" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255); white-space: nowrap; overflow: hidden; max-width: 0vw;">
@@ -291,7 +291,7 @@ body::selection {
              </td>
             </tr>
             <tr height="100%">
-             <td class="exRound" id="out" style="border-radius: 0px 0px 0px 0px; border:0.2em solid black;">
+             <td class="exRound" id="out" style="padding:0; border:0.2em solid black;">
                 <div id="output" class="container"  width="100%" style="position: relative; width: 100%; height: 100%;">
                 </div>
                 <script>
@@ -300,7 +300,7 @@ body::selection {
 
                     var options = {
                         font: "2em monospace",
-                        tabWidth: 4,
+                        tabWidth: 2,
                         colorCaret: "rgb(0,0,0,0)",
                         colorText: "rgb(255,255,255)",
                         colorTextBack: "rgb(0,0,0)",
@@ -423,30 +423,36 @@ body::selection {
     }
 
     window.onload = () => {
-        populate ('frit-frut');
+        populate ('greet');
     }
 </script>
 
 <script>
     function process () {
-        output1.setValue ("// under construction //");
-        /*
+        //output1.setValue ("// under construction //");
+        
         output1.value = "";
         //document.getElementById("tm").innerHTML = "(parsing dp-expr...)";
         setTimeout (function (){
-            var tm = Date.now ();
+            //var tm = Date.now ();
             try {
-                output1.wrap = "off";
-                var output = QDBP.compile (input1.getValue ());
+                //output1.wrap = "off";
+                //var output = QDBP.compile (input1.getValue ());
             
-                output = SExpr.parse (output);
-                if (output.err) {
-                    output1.value = "parsing:\n" + output.err + " at " + "(" + (output.pos.y + 1) + ", " + (output.pos.x + 1) + ")";
-                    document.getElementById("tm").innerHTML = "";
+                parsed = Main.parse (input1.getValue ());
+                if (parsed.err) {
+                    output1.setValue (parsed.err + " at " + "(" + (parsed.pos.y + 1) + ", " + (parsed.pos.x + 1) + ")\n" + "found: '" + parsed.found + "'");
+                    //document.getElementById("tm").innerHTML = "";
                 } else {
-                    var sparsed = (Date.now () - tm)
-                    //document.getElementById("tm").innerHTML = "(converting dp-expr to s-expr took " + sparsed + "ms)";
-                    output1.setValue (SExpr.stringify (output));
+                    //var sparsed = (Date.now () - tm)
+                    result = Main.main ([], parsed);
+                    if (result.err) {
+                        output1.setValue ("calling:\n" + result.err);
+                        //document.getElementById("tm").innerHTML = "";
+                    } else {
+                        output1.setValue (JSON.stringify (result, null, 2));
+                        //output1.setValue (SExpr.stringify (output));
+                    }
                 }
             }
             catch(e) {
@@ -455,7 +461,7 @@ body::selection {
             //output1.selectionStart = 0;
             //output1.selectionEnd = 0;
         }, 0);
-        */
+        
     }
 </script>
 <script>

@@ -1,0 +1,262 @@
+BUILTINS = (function() {
+    function pathSplit(path)
+        path = path.split("/")
+        name = path.pop()
+        return {path: path.join("/"), name: name}
+    }
+    
+    function getFile(path: string, rootdir: Dir, curdir: Dir, rec: string[]): File
+        if rec is undefined
+            rec = []
+        
+        if path in rec
+            Error(`Detected cyclic link`)
+        
+        args = path.split("/")
+        if args[0] == ""
+            file = rootdir
+            args.shift()
+        
+        else
+            file = curdir
+        
+        tmpcurdir = file
+        for a in args
+            if file.kind != "DIR" or not file.items.has(a)
+                Error(`Not a directory`)
+            
+            if file.kind == "DIR"
+                tmpcurdir = file
+            
+            file = file.items.get(a)
+            
+            if file.kind == "LINK"
+                file = getFile(file.path, rootdir, tmpcurdir, [...rec, file.path])
+            
+        return file
+    
+    function typeCheck(args: object[], types: string[]) {
+        for i in [0..(args.length - 1)]
+            if types[i] == "atom"
+                if not args[i] is Literal
+                    Error(`Not an atom`)
+            
+            if types[i] == "list"
+                if not args[i] is List
+                    Error(`Not a list`)
+            
+            if types[i] == "string"
+                if not args[i] is string
+                    Error(`Not a string`)
+    }
+
+    return {
+        "cons": {
+            kind: "NATIVE",
+            args: ["atom", "list"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+
+                return {kind: "LIST", args: [args[0], ...args[1]]}
+            }
+        },
+        "head": {
+            kind: "NATIVE",
+            args: ["list"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+
+                return args[0].args[0];
+            }
+        },
+        "tail": {
+            kind: "NATIVE",
+            args: ["list"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+
+                return {kind: "LIST", args: args[0].args[1..]}
+            }
+        },
+        "read": {
+            kind: "NATIVE",
+            args: ["atom"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind == "FILE"
+                    return {
+                        kind: INLINE",
+                        curdir: curdir,
+                        src: item.value,
+                        compiled: undefined
+                    }
+                
+                if item.kind == "LINK"
+                    tmp = pathSplit(item.path)
+                    
+                    for p in tmp.path
+                        curdir = curdir.get(p)
+
+                    return BUILTINS["read"].apply(item.path, rootdir, curdir)
+                
+                else if item.kind == "DIR"
+                    Error(`Can not read a directory`)
+            }
+        },
+        "write": {
+            kind: "NATIVE",
+            args: ["string", "string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind == "FILE"
+                    item.value = args[1]
+                    
+                if item.kind == "LINK"
+                    tmp = pathSplit(item.path)
+
+                    return BUILTINS["write"].apply([item.path, args[1]], rootdir, tmp.path)
+                    
+                else
+                    Error(`Can not write to a directory`)
+            }
+        },
+        "readlnk": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind != "LINK"
+                    Error(`Not a link`)
+                
+                return item.path
+            }
+        },
+        "writelnk": {
+            kind: "NATIVE",
+            args: ["string", "string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                item = getFile(args[0], rootdir, curdir)
+                if item.kind != "LINK"
+                    Error(`Not a link`)
+                
+                item.path = args[1]
+            }
+        },
+        "mkdir": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                item = getFile(tmp.path, rootdir, curdir)
+                
+                if item.kind != "DIR"
+                    Error(`Not a directory`)
+                
+                if item.items.get(tmp.name)
+                    Error(`Name already exists`)
+                
+                item.items.set(tmp.name, {kind: "DIR", items: new Map<string, File>()})
+            }
+        },
+        "mkfile": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                item = getFile(tmp.path, rootdir, curdir)
+
+                if item.kind != "DIR"
+                    Error(`Not a directory`)
+                
+                if item.items.get(tmp.name)
+                    Error(`Name already exists`)
+                
+                item.items.set(tmp.name, {kind: "FILE", value: ""})
+            }
+        },
+        "mklink": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                item = getFile(tmp.path, rootdir, curdir)
+
+                if item.kind != "DIR"
+                    Error(`Not a directory`)
+                
+                if item.items.get(tmp.name)
+                    Error(`Name already exists`)
+                
+                item.items.set(tmp.name, {kind: "LINK", path: ""})
+            }
+        },
+        "delete": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                parent = getFile(tmp.path, rootdir, curdir)
+                parent.items.delete(tmp.name)
+            }
+        },
+        "exists": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                tmp = pathSplit(args[0])
+                parent = getFile(tmp.path, rootdir, curdir)                
+
+                return parent.items.has(tmp.name)
+            }
+        },
+        "kind": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                item = getFile(args[0], rootdir, curdir)
+
+                return item.kind
+            }
+        },
+        "dir": {
+            kind: "NATIVE",
+            args: ["string"],
+            apply: (args, rootdir, curdir) => {
+                typeCheck(args, this.args)
+                
+                if args[0] == "."
+                    dir = curdir
+                
+                else
+                    dir = getFile(args[0], rootdir, curdir)                
+                    if dir.kind != "DIR"
+                        Error(`Not a directory`)
+                    
+                list = []
+                for key in dir.items.keys()
+                    list.push(key)
+                
+                return {kind: "LIST", args: list}
+            }
+        }
+    }
+})()
+

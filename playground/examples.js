@@ -1,45 +1,40 @@
 examples = {
-"frit-frut":
+"greet":
 `
 (DIR "Args and vars"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "FritFrut") 
-          "and")))
-    """)
+          (CALL read "Greet") 
+          "world")))
+  )
   
-  (DATA "FritFrut"
-    """
-    (PRG
+  (FILE "Greet"
+    (ASM
       (ARGS a)
       (VARS x)
       
-      (ASGN
-        x
-        (LIST "Frit" a "Frut"))
+      (ASGN x (LIST "hello" a))
       
       (RETURN x))
-    """))
+  )
+)
 `,
 
 "foo-bar":
 `
-(DIR "Control flow"
-  (DATA "main"
-    """
-    (PRG
+(DIR "Branching"
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "FooBar")
+          (CALL read "FooBar")
           "foo")))
-    """)
+  )
 
-  (DATA "FooBar"
-    """
-    (PRG
+  (FILE "FooBar"
+    (ASM
       (ARGS a)
       (VARS result)
       
@@ -57,24 +52,23 @@ examples = {
       
       (LABEL end)
       (RETURN result))
-    """))
+  )
+)
 `,
 
 "reverse":
 `
 (DIR "Loops"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "ReverseList")
+          (CALL read "ReverseList")
           (LIST 1 2 3 4))))
-    """)
+  )
 
-  (DATA "ReverseList"
-    """
-    (PRG
+  (FILE "ReverseList"
+    (ASM
       (ARGS input)
       (VARS h t acc)
       
@@ -90,35 +84,34 @@ examples = {
       
       (LABEL done)
       (RETURN acc))
-    """))
+  )
+)
 `,
 
 "tree":
 `
 (DIR "Recursion"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "Tree")
+          (CALL read "Tree")
           (LIST
             "branch"
             "branch"
             "branch"
             "halt"))))
-    """)
+  )
 
-  (DATA "Tree"
-    """
-    (PRG
+  (FILE "Tree"
+    (ASM
       (ARGS n)
       (VARS tree)
       
-      (ASGN tree (CALL cfile "Tree"))
+      (ASGN tree (CALL read "Tree"))
       
       (JMPEQ
-        (head n)
+        (CALL head n)
         "halt"
         done)
       
@@ -133,27 +126,26 @@ examples = {
       
       (LABEL done)
       (RETURN "leaf"))
-    """))
+  )
+)
 `,
 
 "even-odd":
 `
 (DIR "Process interaction"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "IsEven")
+          (CALL read "IsEven")
           (LIST
             "succ"
             "succ"
             "zero"))))
-    """)
+  )
 
-  (DATA "IsEven"
-    """
-    (PRG
+  (FILE "IsEven"
+    (ASM
       (ARGS arg)
       (VARS isOdd)
       
@@ -166,15 +158,14 @@ examples = {
       (RETURN TRUE)
       
       (LABEL odd)
-      (ASGN isOdd (CALL cfile "IsOdd"))
+      (ASGN isOdd (CALL read "IsOdd"))
       (RETURN
         (CALL isOdd
           (CALL tail arg))))
-    """)
+  )
   
-  (DATA "IsOdd"
-    """
-    (PRG
+  (FILE "IsOdd"
+    (ASM
       (ARGS arg)
       (VARS isEven)
       
@@ -187,22 +178,22 @@ examples = {
       (RETURN FALSE)
       
       (LABEL even)
-      (ASGN isEven (CALL cfile "IsEven"))
+      (ASGN isEven (CALL read "IsEven"))
       (RETURN
         (CALL isEven
           (CALL tail arg))))
-    """))
+  )
+)
 `,
 
 "unary":
 `
-(DIR "Combining directories"
-  (DATA "main"
-    """
-    (PRG
+(DIR "Packaging"
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "Unary/Mul")
+          (CALL read "Unary/Mul")
           (LIST
             "succ"
             "succ"
@@ -213,26 +204,24 @@ examples = {
             "succ"
             "succ"
             "zero"))))
-    """)
+  )
   
   (DIR "Unary"
-    (DATA "Inc"
-      """
-      (PRG
+    (FILE "Inc"
+      (ASM
         (ARGS arg)
         (RETURN
           (CALL cons
             "succ"
             arg)))
-      """)
+    )
     
-    (DATA "Add"
-      """
-      (PRG
+    (FILE "Add"
+      (ASM
         (ARGS a b)
-        (VARS inc, acc)
+        (VARS inc acc)
         
-        (ASGN inc (CALL cfile "Inc"))
+        (ASGN inc (CALL read "Inc"))
         (ASGN acc b)
         
         (LABEL loop)
@@ -248,15 +237,14 @@ examples = {
 
         (LABEL done)
         (RETURN acc))
-      """)
+    )
     
-    (DATA "Mul"
-      """
-      (PRG
+    (FILE "Mul"
+      (ASM
         (ARGS a b)
-        (VARS add, acc)
+        (VARS add acc)
         
-        (ASGN add (CALL cfile "Add"))
+        (ASGN add (CALL read "Add"))
         (ASGN acc (LIST "zero"))
         
         (LABEL loop)
@@ -272,15 +260,16 @@ examples = {
 
         (LABEL done)
         (RETURN acc))
-      """)))
+    )
+  )
+)
 `,
 
 "fun":
 `
 (DIR "Fun section"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (VARS
         createGrid
         drawSpiral
@@ -289,13 +278,13 @@ examples = {
         size)
       
       (ASGN createGrid
-        (CALL cfile "Grid/Create"))
+        (CALL read "Grid/Create"))
       
       (ASGN drawSpiral
-        (CALL cfile "DrawSpiral"))
+        (CALL read "DrawSpiral"))
       
       (ASGN gridToString
-        (CALL cfile "Grid/ToString"))
+        (CALL read "Grid/ToString"))
       
       (ASGN size 8)
 
@@ -309,12 +298,11 @@ examples = {
       (RETURN
         (CALL dev/stdout
           (CALL gridToString grid))))
-    """)
+  )
 
   (DIR Grid
-    (DATA "Create"
-      """
-      (PRG
+    (FILE "Create"
+      (ASM
         (ARGS sizeX sizeY)
         (VARS i j grid row)
         
@@ -338,11 +326,10 @@ examples = {
         (LABEL iEnd)
         
         (RETURN grid))
-      """)
+    )
     
-    (DATA "Plot"
-      """
-      (PRG
+    (FILE "Plot"
+      (ASM
         (ARGS grid x y)
         (VARS row)
         
@@ -355,11 +342,10 @@ examples = {
           row
           x
           " "))
-        """)
+    )
     
-    (DATA "ToString"
-      """
-      (PRG
+    (FILE "ToString"
+      (ASM
           (ARGS grid)
           (VARS y x rows row)
           
@@ -377,7 +363,7 @@ examples = {
           (ASGN gridRow
             (CALL "stdlib/getnth"
               grid
-              y)
+              y))
               
           (ASGN x 0)
           (LABEL xBegin)
@@ -413,8 +399,10 @@ examples = {
           
           (LABEL yEnd)
           
-          (RETURN rows)))
-        """)))
+          (RETURN rows))
+    )
+  )
+)
 `,
 "factorial":
 `

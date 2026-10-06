@@ -290,24 +290,37 @@ var edit = function (node, options) {
         document.getElementById(`scroll${rndid}v`).style.display = "none";
         document.getElementById(`scroll${rndid}h`).style.display = "none";
         setTimeout (function () {
-            document.getElementById(`container${rndid}`).style.width = (document.getElementById(`div${rndid}`).offsetWidth - 12) + "px";
-            document.getElementById(`container${rndid}`).style.height = (document.getElementById(`div${rndid}`).offsetHeight - 12) + "px";
+            document.getElementById(`container${rndid}`).style.width = (document.getElementById(`div${rndid}`).offsetWidth - 15) + "px";
+            document.getElementById(`container${rndid}`).style.height = (document.getElementById(`div${rndid}`).offsetHeight - 15) + "px";
 
-            document.getElementById(`container${rndid}`).style.display = "block";
+            document.getElementById(`container${rndid}`).style.display = "inline";
 
             setTimeout (function () {
-                document.getElementById(`scroll${rndid}v`).style.top = 0 + "px";
-                document.getElementById(`scroll${rndid}v`).style.left = (document.getElementById(`div${rndid}`).offsetWidth - 9) + "px";
-                document.getElementById(`scroll${rndid}v`).style.width = 9 + "px";
+                document.getElementById(`scroll${rndid}v`).style.top = "0px";
+                document.getElementById(`scroll${rndid}v`).style.left = document.getElementById(`container${rndid}`).style.width;
+                document.getElementById(`scroll${rndid}v`).style.width = "15px";
                 document.getElementById(`scroll${rndid}v`).style.height = document.getElementById(`container${rndid}`).style.height;
 
-                document.getElementById(`scroll${rndid}h`).style.top = (document.getElementById(`div${rndid}`).offsetHeight - 9) + "px";
-                document.getElementById(`scroll${rndid}h`).style.left = 0 + "px";
+                document.getElementById(`scroll${rndid}h`).style.top = document.getElementById(`container${rndid}`).style.height;
+                document.getElementById(`scroll${rndid}h`).style.left = "0px";
                 document.getElementById(`scroll${rndid}h`).style.width = document.getElementById(`container${rndid}`).style.width;
-                document.getElementById(`scroll${rndid}h`).style.height = 9 + "px";
+                document.getElementById(`scroll${rndid}h`).style.height = "15px";
 
-                document.getElementById(`scroll${rndid}v`).style.display = "block";
-                document.getElementById(`scroll${rndid}h`).style.display = "block";
+                /*
+                document.getElementById(`scroll${rndid}v`).style.top = "0px";
+                document.getElementById(`scroll${rndid}v`).style.left = (document.getElementById(`div${rndid}`).offsetWidth - 15) + "px";
+                document.getElementById(`scroll${rndid}v`).style.width = "15px";
+                //document.getElementById(`scroll${rndid}v`).style.height = document.getElementById(`container${rndid}`).style.height;
+                document.getElementById(`scroll${rndid}v`).style.height = (document.getElementById(`div${rndid}`).offsetHeight - 15) + "px";
+
+                document.getElementById(`scroll${rndid}h`).style.top = (document.getElementById(`div${rndid}`).offsetHeight - 15) + "px";
+                document.getElementById(`scroll${rndid}h`).style.left = "0px";
+                //document.getElementById(`scroll${rndid}h`).style.width = document.getElementById(`container${rndid}`).style.width;
+                document.getElementById(`scroll${rndid}h`).style.width = (document.getElementById(`div${rndid}`).offsetWidth - 15) + "px";
+                document.getElementById(`scroll${rndid}h`).style.height = "15px";
+                */
+                document.getElementById(`scroll${rndid}v`).style.display = "inline";
+                document.getElementById(`scroll${rndid}h`).style.display = "inline";
 
                 setTimeout (function () {
                     updateCaret();
@@ -318,20 +331,20 @@ var edit = function (node, options) {
     }
     
     function setSliders() {
-        let hght = document.getElementById(`scroll${rndid}v`).clientHeight * document.getElementById(`input${rndid}`).clientHeight / document.getElementById(`input${rndid}`).scrollHeight;
+        let hght = (document.getElementById(`scroll${rndid}v`).clientHeight) * document.getElementById(`input${rndid}`).clientHeight / document.getElementById(`input${rndid}`).scrollHeight;
         let top = (document.getElementById(`scroll${rndid}v`).clientHeight - hght) * document.getElementById(`input${rndid}`).scrollTop / (document.getElementById(`input${rndid}`).scrollHeight - document.getElementById(`input${rndid}`).clientHeight);
         if (isNaN (top) || top < 0) top = 0;
         
         document.getElementById(`slider${rndid}v`).style.top = top + "px";
-        document.getElementById(`slider${rndid}v`).style.left = "0px";
+        document.getElementById(`slider${rndid}v`).style.left = "6px";
         document.getElementById(`slider${rndid}v`).style.width = "9px";
         document.getElementById(`slider${rndid}v`).style.height =  hght + "px";
 
-        let wdth = document.getElementById(`scroll${rndid}h`).clientWidth * document.getElementById(`input${rndid}`).clientWidth / document.getElementById(`input${rndid}`).scrollWidth;
+        let wdth = (document.getElementById(`scroll${rndid}h`).clientWidth) * document.getElementById(`input${rndid}`).clientWidth / document.getElementById(`input${rndid}`).scrollWidth;
         let lft = (document.getElementById(`scroll${rndid}h`).clientWidth - wdth) * document.getElementById(`input${rndid}`).scrollLeft / (document.getElementById(`input${rndid}`).scrollWidth - document.getElementById(`input${rndid}`).clientWidth);
         if (isNaN (lft) || lft < 0) lft = 0;
 
-        document.getElementById(`slider${rndid}h`).style.top = 0 + "px";
+        document.getElementById(`slider${rndid}h`).style.top = "6px";
         document.getElementById(`slider${rndid}h`).style.left = lft + "px";
         document.getElementById(`slider${rndid}h`).style.width = wdth + "px";
         document.getElementById(`slider${rndid}h`).style.height = "9px";

@@ -29,7 +29,7 @@ The following grammar describes the serialized representation of a filesystem hi
 
 <dir> := (DIR <name> <item>+)
 
-<item> := (DATA <name> <string>)
+<item> := (FILE <name> <s-expr>)
         | (LINK <name> <string>)
         | <dir>
 
@@ -39,7 +39,7 @@ The following grammar describes the serialized representation of a filesystem hi
 Programs are themselves stored as textual data files using a symbolic S-expression syntax. A program consists of optional argument and variable declarations followed by a sequence of instructions executed from top to bottom. Expressions may consist of literals, variables, lists, or procedure calls.
 
 ```
-<start> := (PRG (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
+<start> := (ASM (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
 
 <instr> := (LABEL <identifier>)
          | (ASGN <identifier> <expr>)
@@ -77,42 +77,39 @@ The following examples introduce the language through a series of increasingly s
 
 Every procedure may declare a list of formal arguments and a collection of local variables. Arguments receive their values from the caller when the procedure is invoked, whereas variables provide mutable storage local to a single execution of the procedure.
 
-In this example, the procedure `FritFrut` accepts a single argument, constructs a list containing two constant strings surrounding that argument, stores the resulting list in a local variable, and finally returns it to the caller.
+In this example, the procedure `Greet` accepts a single argument, constructs a list containing two constant strings, stores the resulting list in a local variable, and finally returns it to the caller.
 
 **Program:**
 
 ```
 (DIR "Args and vars"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "FritFrut") 
-          "and")))
-    """)
+          (CALL read "Greet") 
+          "world")))
+  )
   
-  (DATA "FritFrut"
-    """
-    (PRG
+  (FILE "Greet"
+    (ASM
       (ARGS a)
       (VARS x)
       
-      (ASGN
-        x
-        (LIST "Frit" a "Frut"))
+      (ASGN x (LIST "hello" a))
       
       (RETURN x))
-    """))
+  )
+)
 ```
 
 **Output:**
 
 ```
-("Frit" "and" "Frut")
+("hello" "world")
 ```
 
-### Control Flow
+### Branching
 
 Procedures execute sequentially unless the instruction pointer is redirected by an explicit jump instruction. Conditional jumps compare two evaluated expressions and transfer execution to a labeled instruction only when the comparison succeeds. This mechanism forms the basis for implementing conditional logic.
 
@@ -121,19 +118,17 @@ The following procedure distinguishes between two possible input values and retu
 **Program:**
 
 ```
-(DIR "Control flow"
-  (DATA "main"
-    """
-    (PRG
+(DIR "Branching"
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "FooBar")
+          (CALL read "FooBar")
           "foo")))
-    """)
+  )
 
-  (DATA "FooBar"
-    """
-    (PRG
+  (FILE "FooBar"
+    (ASM
       (ARGS a)
       (VARS result)
       
@@ -151,7 +146,8 @@ The following procedure distinguishes between two possible input values and retu
       
       (LABEL end)
       (RETURN result))
-    """))
+  )
+)
 ```
 
 **Output:**
@@ -170,18 +166,16 @@ This example traverses a symbolic list element by element. The procedure repeate
 
 ```
 (DIR "Loops"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "ReverseList")
+          (CALL read "ReverseList")
           (LIST 1 2 3 4))))
-    """)
+  )
 
-  (DATA "ReverseList"
-    """
-    (PRG
+  (FILE "ReverseList"
+    (ASM
       (ARGS input)
       (VARS h t acc)
       
@@ -197,7 +191,8 @@ This example traverses a symbolic list element by element. The procedure repeate
       
       (LABEL done)
       (RETURN acc))
-    """))
+  )
+)
 ```
 
 **Otuput:**
@@ -216,26 +211,24 @@ The following example recursively transforms a linear sequence of control symbol
 
 ```
 (DIR "Recursion"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "Tree")
+          (CALL read "Tree")
           (LIST
             "branch"
             "branch"
             "branch"
             "halt"))))
-    """)
+  )
 
-  (DATA "Tree"
-    """
-    (PRG
+  (FILE "Tree"
+    (ASM
       (ARGS n)
       (VARS tree)
       
-      (ASGN tree (CALL cfile "Tree"))
+      (ASGN tree (CALL read "Tree"))
       
       (JMPEQ
         (head n)
@@ -253,7 +246,8 @@ The following example recursively transforms a linear sequence of control symbol
       
       (LABEL done)
       (RETURN "leaf"))
-    """))
+  )
+)
 ```
 
 **Output:**
@@ -282,21 +276,19 @@ The following example implements mutually recursive predicates for determining w
 
 ```
 (DIR "Process interaction"
-  (DATA "main"
-    """
-    (PRG
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "IsEven")
+          (CALL read "IsEven")
           (LIST
             "succ"
             "succ"
             "zero"))))
-    """)
+  )
 
-  (DATA "IsEven"
-    """
-    (PRG
+  (FILE "IsEven"
+    (ASM
       (ARGS arg)
       (VARS isOdd)
       
@@ -309,15 +301,14 @@ The following example implements mutually recursive predicates for determining w
       (RETURN TRUE)
       
       (LABEL odd)
-      (ASGN isOdd (CALL cfile "IsOdd"))
+      (ASGN isOdd (CALL read "IsOdd"))
       (RETURN
         (CALL isOdd
           (CALL tail arg))))
-    """)
+  )
   
-  (DATA "IsOdd"
-    """
-    (PRG
+  (FILE "IsOdd"
+    (ASM
       (ARGS arg)
       (VARS isEven)
       
@@ -330,11 +321,12 @@ The following example implements mutually recursive predicates for determining w
       (RETURN FALSE)
       
       (LABEL even)
-      (ASGN isEven (CALL cfile "IsEven"))
+      (ASGN isEven (CALL read "IsEven"))
       (RETURN
         (CALL isEven
           (CALL tail arg))))
-    """))
+  )
+)
 ```
 
 **Output:**
@@ -343,7 +335,7 @@ The following example implements mutually recursive predicates for determining w
 true
 ```
 
-### Combining Directories
+### Packaging
 
 One of Symp's distinguishing features is that directory structure naturally serves as the organizational structure of a software system. Related procedures can be grouped into directories, and relative path resolution allows each procedure to locate neighboring components without requiring a separate module or package system.
 
@@ -352,13 +344,12 @@ In this example, a directory named Unary forms a small arithmetic library implem
 **Program:**
 
 ```
-(DIR "Combining directories"
-  (DATA "main"
-    """
-    (PRG
+(DIR "Packaging"
+  (FILE "main"
+    (ASM
       (RETURN
         (CALL
-          (CALL cfile "Unary/Mul")
+          (CALL read "Unary/Mul")
           (LIST
             "succ"
             "succ"
@@ -369,26 +360,24 @@ In this example, a directory named Unary forms a small arithmetic library implem
             "succ"
             "succ"
             "zero"))))
-    """)
+  )
   
   (DIR "Unary"
-    (DATA "Inc"
-      """
-      (PRG
+    (FILE "Inc"
+      (ASM
         (ARGS arg)
         (RETURN
           (CALL cons
             "succ"
             arg)))
-      """)
+    )
     
-    (DATA "Add"
-      """
-      (PRG
+    (FILE "Add"
+      (ASM
         (ARGS a b)
         (VARS inc, acc)
         
-        (ASGN inc (CALL cfile "Inc"))
+        (ASGN inc (CALL read "Inc"))
         (ASGN acc b)
         
         (LABEL loop)
@@ -404,15 +393,14 @@ In this example, a directory named Unary forms a small arithmetic library implem
 
         (LABEL done)
         (RETURN acc))
-      """)
+    )
     
-    (DATA "Mul"
-      """
-      (PRG
+    (FILE "Mul"
+      (ASM
         (ARGS a b)
         (VARS add, acc)
         
-        (ASGN add (CALL cfile "Add"))
+        (ASGN add (CALL read "Add"))
         (ASGN acc (LIST "zero"))
         
         (LABEL loop)
@@ -428,7 +416,9 @@ In this example, a directory named Unary forms a small arithmetic library implem
 
         (LABEL done)
         (RETURN acc))
-      """)))
+    )
+  )
+)
 ```
 
 **Output:**

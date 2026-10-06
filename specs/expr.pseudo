@@ -1,0 +1,57 @@
+// data structures
+
+SExpr       : Atom | SExpr[]
+
+Expr        : Literal | List | Var
+Literal     : string | number | boolean
+List        : {kind: "LIST", args: Expr[]}
+Var         : {kind: "VAR", name: string}
+
+// code implementation
+
+listify(e: SExpr): Expr
+    if e is Atom
+        if e == "NIL"
+            return null
+        
+        else if e is string
+            return e
+        
+        else if e is number
+            return Number.parse(e)
+        
+        else if e == "TRUE"
+            return true
+            
+        else if e == "FALSE"
+            return false
+        
+        else if "1234567890".indexOf(e.charAt(0)) == -1
+            return {kind: "VAR", name: e}
+        
+        Error(`Atom not valid`)
+
+    else
+        return {kind:"LIST", args: e.map(e => compile(e))}
+
+delistify(e: Expr): SExpr
+    if e is null
+        return "NIL"
+    
+    if e is string
+        return e
+    
+    else if e is number
+        return e.toString()
+    
+    else if e is boolean
+        return e.toString()
+    
+    else if e.kind = "VAR"
+        return e.name
+    
+    else if e.kind = "LIST"
+        return e.args.map(e => decompile(e))
+    
+    Error(`Expression not valid`)
+
