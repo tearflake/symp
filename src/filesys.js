@@ -205,7 +205,7 @@ var Filesys = (
             
             let [fmain, fdir] = getEntity(`"/main"`, root, root);
             let cmain = Asm.enparse (fmain.value, fdir);
-            let res = Asm.run (cmain, [], root);
+            let res = Asm.run (cmain, args, root);
             
             return Asm.unlist (res);
         }
