@@ -76,7 +76,7 @@ All runtime state resides within the virtual filesystem. Builtin procedures prov
 
 The following examples illustrate how specific programming constructs are formed, how to interact with the virtual filesystem, and how metaprogramming works to form Symp programs.
 
-### Introductory examples
+### 3.1. Introductory examples
 
 The following examples introduce the basic concepts and features of Symp. They demonstrate the language's syntax, fundamental operations, and core programming constructs, providing a starting point for understanding how Symp programs are structured and executed. Each example focuses on a particular feature and illustrates its usage with a simple, self-contained program.
 
@@ -467,7 +467,7 @@ In this example, a directory named Unary forms a small arithmetic library implem
     zero)
 ```
 
-### Filesystem examples
+### 3.2. Filesystem examples
 
 Symp provides a virtual filesystem that allows programs to work with files, directories, and links. The following examples demonstrate how to create and manipulate filesystem objects, read and write file contents, inspect directory entries, and work with symbolic links. Together, they illustrate how filesystem operations can be performed directly from Symp programs.
 
@@ -514,7 +514,7 @@ Directories let programs organize related files and other directories. The `mkdi
 **Output:**
 
 ```
-(LIST archive)
+(archive)
 ```
 
 #### Working with Links
@@ -547,7 +547,7 @@ This example creates a file, creates a link to it, and reads the file through th
 (('hello through a link') message)
 ```
 
-### Metaprogramming example
+### 3.3. Metaprogramming example
 
 Symp supports metaprogramming, allowing programs to construct and execute other programs dynamically. The following example demonstrates how to represent a program as a list, convert that representation into an executable `ASM` element using `enasm`, and execute the resulting program to obtain its return value. This illustrates how Symp programs can treat code as data and generate executable behavior at runtime.
 
