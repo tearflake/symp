@@ -5,9 +5,9 @@ Symp is a lightweight symbolic programming language whose primary abstraction is
 ## Table of contents
 
 - [1. About Symp](#1-about-symp)
-- [2. Theoretical Background] (#2-theoretical-background)
+- [2. Theoretical Background](#2-theoretical-background)
     - [2.1. Formal Syntax](#21-formal-syntax)
-    - [2.2. Informal Semantics](#22=informal-semantics)
+    - [2.2. Informal Semantics](#22-informal-semantics)
 
 - [3. Practical Examples](#3-practical-examples)
     - [3.1. Introductory examples](#31-Introductory-examples)
