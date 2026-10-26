@@ -222,10 +222,10 @@ This example traverses a symbolic list element by element. The procedure repeate
 )
 ```
 
-**Otuput:**
+**Output:**
 
 ```
-(List 4 3 2 1)
+(4 3 2 1)
 ```
 
 #### Recursion
@@ -284,17 +284,14 @@ The following example recursively transforms a linear sequence of control symbol
 **Output:**
 
 ```
-(LIST
-    tree
-    (LIST
-        tree
-        (LIST tree leaf leaf)
-        (LIST tree leaf leaf))
+(tree
+    (tree
+        (tree leaf leaf)
+        (tree leaf leaf))
     
-    (LIST
-        "tree"
-        (LIST tree leaf leaf)
-        (LIST tree leaf leaf)))
+    (tree
+        (tree leaf leaf)
+        (tree leaf leaf)))
 ```
 
 #### Process Interaction
@@ -471,14 +468,15 @@ In this example, a directory named Unary forms a small arithmetic library implem
 **Output:**
 
 ```
-(LIST
+(
     succ
     succ
     succ
     succ
     succ
     succ
-    zero)
+    zero
+)
 ```
 
 ### 3.2. Filesystem examples
@@ -567,7 +565,7 @@ Symp supports metaprogramming, allowing programs to construct and execute other 
 
 #### Runtime program creation
 
-n Symp, programs can be represented as lists and manipulated as data. The `enasm` builtin converts a list describing an assembly program into an executable `ASM` value. That value can then be called like any other procedure. In this example, the program builds a list containing a `RETURN` instruction, compiles the list with `enasm`, and immediately executes the resulting program.
+In Symp, programs can be represented as lists and manipulated as data. The `enasm` builtin converts a list describing an assembly program into an executable `ASM` value. That value can then be called like any other procedure. In this example, the program builds a list containing a `RETURN` instruction, compiles the list with `enasm`, and immediately executes the resulting program.
 
 **Program:**
 
