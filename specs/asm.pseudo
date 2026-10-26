@@ -10,25 +10,20 @@
 
 // Data structures
 
-Expr        : Literal | List | Var | Call
-
+Expr        : Literal | List | Var | Asm | Call
 Literal     : string | number | boolean
 List        : {kind: "LIST", args: Expr[]}
 Var         : {kind: "VAR", name: string}
 
-Asm         : {kind: "ASM", args: string[], vars: string[], instr: Instr[], curdir: Dir}
+Asm         : {kind: "ASM", args: string[], vars: string[], instrs: Instr[], dir: Dir}
 Instr       : Lbl | Call | Asgn | Jne | Jeq | Jmp | Ret
 Lbl         : {kind: "LABEL", label: string}
 Asgn        : {kind: "ASGN", var: Var, value: Expr}
 Jne         : {kind: "JMPNE", e1: Expr, e2: Expr, label: string}
 Jeq         : {kind: "JMPEQ", e1: Expr, e2: Expr, label: string}
 Jmp         : {kind: "JMP", label: string}
-Call        : {kind: "CALL", type: "STMT" | "EXPR", calling: Callable | Var | Call, args: Expr[]}
+Call        : {kind: "CALL", type: "STMT" | "EXPR", calling: Var | Call | Asm, args: Expr[]}
 Ret         : {kind: "RETURN", value: Expr}
-
-Callable    : Inline | Native
-Inline      : {kind: "INLINE", src: Expr, compiled: Asm, curdir: Dir}
-Native      : {kind: "NATIVE", apply: (args: Expr[], rootdir: Dir, curdir: Dir) => Expr}
 
 File        : Data | Link
 Dir         : {kind: "DIR", name: string, items: Map<string, File | Dir>}
@@ -37,20 +32,10 @@ Link        : {kind: "LINK", path: string}
 
 // Code implementation
 
-function compileAsm(code: Expr, rootdir: Dir, curdir: Dir): Asm
-
-function main(args: Expr[], root: Dir): Expr
-    if not root.items.has("main")
-        Error(`Required procedure 'main' is missing from the root directory`)
-        
-    return evalExpr({
-        kind: "CALL",
-        type: "STMT",
-        calling: BUILTINS["read"].apply(["main"], root, root)
-        args: args
-    }, root, root)
-
-function run(prog: Asm, args: Expr[], rootdir: Dir): Expr
+function run(prog: Asm, args: Expr[], root: Dir): Expr
+    if prog.args.length != args.length
+        Error(`Arity mismatch`)
+    
     env = {}
     for i = 0 to prog.args.length - 1
         env[prog.args[i]] = args[i]
@@ -59,45 +44,37 @@ function run(prog: Asm, args: Expr[], rootdir: Dir): Expr
         env[prog.vars[i]] = undefined
     
     labels = {}
-    for idx = 0 to prog.instr.length - 1
-        if prog.instr[idx].kind == "LABEL"
-            labels[prog.instr[idx].label] = idx
+    for idx = 0 to prog.instrs.length - 1
+        if prog.instrs[idx].kind == "LABEL"
+            labels[prog.instrs[idx].label] = idx
     
     idx = 0
-    while idx < prog.instr.length
-        instr = prog.instr[idx]
+    ctx = {env: env, root: root, dir: prog.dir}
+    while idx < prog.instrs.length
+        instr = prog.instrs[idx]
         if instr.kind == "CALL"
-            evalCall("STMT", instr, env, rootdir, prog.curdir)
+            evalCall(instr, ctx)
         
         else if instr.kind ==  "RETURN"
-            return evalExpr(instr.value, env, rootdir, prog.curdir)
+            if instr.value == undefined
+                return undefined
+            
+            return evalExpr(instr.value, ctx)
                 
         else if instr.kind == "ASGN"
-            env[instr.var.name] = evalExpr(instr.value, env, rootdir, prog.curdir)
+            env[instr.var.name] = evalExpr(instr.value, ctx)
         
-        else if instr.kind == "JMPNE"
-                e1 = evalExpr(instr.e1, env, rootdir, prog.curdir)
-                e2 = evalExpr(instr.e2, env, rootdir, prog.curdir)
-                if e1 is not Literal or e2 is not Literal
-                    Error(`Compared values not reduced to literals`)
-                
-                if instr.label not in labels
-                    Error(`Nonexisting label: ${instr.label}`)
-
-                if e1 != e2
-                    idx = labels[instr.label]
+        else if instr.kind == "JMPNE" or instr.kind == "JMPEQ"
+            e1 = evalExpr(instr.e1, ctx)
+            e2 = evalExpr(instr.e2, ctx)
+            if e1 is not Literal or e2 is not Literal
+                Error(`Compared values not reduced to literals`)
             
-        else if instr.kind == "JMPEQ"
-                e1 = evalExpr(instr.e1, env, rootdir, prog.curdir)
-                e2 = evalExpr(instr.e2, env, rootdir, prog.curdir)
-                if e1 is not Literal or e2 is not Literal
-                    Error(`Compared values not reduced to literals`)
-                
-                if instr.label not in labels
-                    Error(`Nonexisting label: ${instr.label}`)
+            if instr.label not in labels
+                Error(`Nonexisting label: ${instr.label}`)
 
-                if e1 == e2
-                    idx = labels[instr.label]
+            if (instr.kind == "JMPNE") == (e1 != e2)
+                idx = labels[instr.label]
             
         else if instr.kind ==  "JMP"
             if instr.label not in labels
@@ -105,56 +82,51 @@ function run(prog: Asm, args: Expr[], rootdir: Dir): Expr
             
             idx = labels[instr.label]
         
-        idx = idx + 1
+        idx += 1
 
     return undefined
 
-function evalExpr(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
+function evalExpr(expr: Expr, ctx: {env: {}, root: Dir, dir: Dir}): Expr
     if expr.kind == "VAR"
-        return evalVar(expr, env, rootdir, curdir)
+        return evalVar(expr, ctx)
     
     else if expr.kind == "LIST"
-        return evalList(expr, env, rootdir, curdir)
+        return evalList(expr, ctx)
         
     else if expr.kind == "CALL"
-        return evalCall("EXPR", expr, env, rootdir, curdir)
+        return evalCall(expr, ctx)
 
     return expr
 
-function evalVar(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
-    if expr.name in env
-        if env[expr.name] == undefined
+function evalVar(expr: Expr, ctx: {env: {}, root: Dir, dir: Dir}): Expr
+    if expr.name in ctx.env
+        if ctx.env[expr.name] == undefined
             Error(`Variable accessed before assignment: ${expr.name}`)
         
-        return env[expr.name]
+        return ctx.env[expr.name]
     
-    Error(`Nonexisting variable: ${expr.name}`)
+    else if expr.name in BUILTINS
+        return BUILTINS[expr.name]
     
-function evalList(expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
-    return {kind: "LIST", args: expr.args.map(e => evalExpr(e, env, rootdir, curdir))}
-        
-function evalCall(type: "STMT" | "EXPR", expr: Expr, env: {}, rootdir: Dir, curdir: Dir): Expr
-    calling = expr.calling
-    if calling.kind == "VAR" or calling.kind == "CALL"
-        calling = evalExpr(calling, env, rootdir, curdir)
+    Error(`Undeclared variable: ${expr.name}`)
     
-    if calling.kind == "INLINE"
-        if !calling.compiled
-            calling.compiled = compileAsm(calling.src, rootdir, calling.curdir)
+function evalList(expr: Expr, ctx: {env: {}, root: Dir, dir: Dir}): Expr
+    return {kind: "LIST", args: expr.args.map(e => evalExpr(e, ctx)};
         
-        if calling.compiled.args.length != expr.args.length
-            Error(`Arity mismatch`)
-        
-        result = run(calling.compiled, expr.args.map(e => evalExpr(e, env, rootdir, curdir)), rootdir)
+function evalCall(expr: Expr, ctx: {env: {}, root: Dir, dir: Dir}): Expr
+    fn = evalExpr(expr.calling, ctx)
+    args = expr.args.map(e => evalExpr(e, ctx))
+    if fn.kind == "ASM"
+        result = run(fn, args, ctx.root)
 
-    else if calling.kind == "NATIVE"
-        result = calling.apply(expr.args.map(e => evalExpr(e, env, rootdir, curdir)), rootdir, curdir)
-    
+    else if fn.kind == "NATIVE"
+        result = fn.apply(args, ctx.root, ctx.dir)
+
     else
         Error(`Expression not callable`)
-
-    if type == "EXPR" and result == undefined
+    
+    if expr.type == "EXPR" and result == undefined
         Error(`Function returned undefined result`)
-        
+    
     return result
 

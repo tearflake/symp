@@ -6,7 +6,9 @@ examples = {
     (ASM
       (RETURN
         (CALL
-          (CALL read "Greet") 
+          (CALL enasm "."
+            (CALL read "Greet"))
+          
           "world")))
   )
   
@@ -29,7 +31,9 @@ examples = {
     (ASM
       (RETURN
         (CALL
-          (CALL read "FooBar")
+          (CALL enasm "."
+            (CALL read "FooBar"))
+          
           "foo")))
   )
 
@@ -63,7 +67,9 @@ examples = {
     (ASM
       (RETURN
         (CALL
-          (CALL read "ReverseList")
+          (CALL enasm "."
+            (CALL read "ReverseList"))
+          
           (LIST 1 2 3 4))))
   )
 
@@ -95,7 +101,9 @@ examples = {
     (ASM
       (RETURN
         (CALL
-          (CALL read "Tree")
+          (CALL enasm "."
+            (CALL read "Tree"))
+          
           (LIST
             "branch"
             "branch"
@@ -108,7 +116,9 @@ examples = {
       (ARGS n)
       (VARS tree)
       
-      (ASGN tree (CALL read "Tree"))
+      (ASGN tree
+        (CALL enasm "."
+          (CALL read "Tree")))
       
       (JMPEQ
         (CALL head n)
@@ -137,7 +147,9 @@ examples = {
     (ASM
       (RETURN
         (CALL
-          (CALL read "IsEven")
+          (CALL enasm "."
+            (CALL read "IsEven"))
+          
           (LIST
             "succ"
             "succ"
@@ -158,7 +170,10 @@ examples = {
       (RETURN TRUE)
       
       (LABEL odd)
-      (ASGN isOdd (CALL read "IsOdd"))
+      (ASGN isOdd
+        (CALL enasm "."
+          (CALL read "IsOdd")))
+      
       (RETURN
         (CALL isOdd
           (CALL tail arg))))
@@ -178,7 +193,10 @@ examples = {
       (RETURN FALSE)
       
       (LABEL even)
-      (ASGN isEven (CALL read "IsEven"))
+      (ASGN isEven
+        (CALL enasm "."
+          (CALL read "IsEven")))
+      
       (RETURN
         (CALL isEven
           (CALL tail arg))))
@@ -193,7 +211,9 @@ examples = {
     (ASM
       (RETURN
         (CALL
-          (CALL read "Unary/Mul")
+          (CALL enasm "Unary"
+            (CALL read "Unary/Mul"))
+          
           (LIST
             "succ"
             "succ"
@@ -221,7 +241,10 @@ examples = {
         (ARGS a b)
         (VARS inc acc)
         
-        (ASGN inc (CALL read "Inc"))
+        (ASGN inc
+          (CALL enasm "."
+            (CALL read "Inc")))
+        
         (ASGN acc b)
         
         (LABEL loop)
@@ -244,7 +267,10 @@ examples = {
         (ARGS a b)
         (VARS add acc)
         
-        (ASGN add (CALL read "Add"))
+        (ASGN add
+          (CALL enasm "."
+            (CALL read "Add")))
+        
         (ASGN acc (LIST "zero"))
         
         (LABEL loop)
@@ -261,6 +287,73 @@ examples = {
         (LABEL done)
         (RETURN acc))
     )
+  )
+)
+`,
+
+"fs1":
+`
+(DIR "Working with files"
+  (FILE "main"
+    (ASM
+      (CALL mkfile "notes")
+      (CALL write "notes"
+        (LIST "hello" "world"))
+      
+      (RETURN (CALL read "notes")))
+  )
+)
+`,
+
+"fs2":
+`
+(DIR "Working with directories"
+  (FILE "main"
+    (ASM
+      (CALL mkdir "workspace")
+      (CALL mkdir "workspace/archive")
+      (RETURN
+        (CALL listdir "workspace")))
+  )
+)
+`,
+
+"fs3":
+`
+(DIR "Working with links"
+  (FILE "main"
+    (ASM
+      (CALL mkfile "message")
+      (CALL write "message"
+        (LIST "hello through a link"))
+        
+      (CALL mklink "shortcut")
+      (CALL writelnk "shortcut" "message")
+      (RETURN
+        (LIST
+          (CALL read "shortcut")
+          (CALL readlnk "shortcut"))))
+  )
+)
+`,
+
+"mp1":
+`
+(DIR "Metaprogramming"
+  (FILE "main"
+    (ASM
+      (VARS program)
+
+      (ASGN program
+        (LIST
+          "ASM"
+          (LIST
+            "RETURN"
+            (LIST "LIST" "\\"hello\\"" "\\"from generated code\\""))))
+
+      (RETURN
+        (CALL
+          (CALL enasm "." program))))
   )
 )
 `,
@@ -300,7 +393,7 @@ examples = {
           (CALL gridToString grid))))
   )
 
-  (DIR Grid
+  (DIR "Grid"
     (FILE "Create"
       (ASM
         (ARGS sizeX sizeY)

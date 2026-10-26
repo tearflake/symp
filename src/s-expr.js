@@ -1,5 +1,5 @@
-// sexpression.js
-// (c) tearflake, 2025
+// s-expr.js
+// (c) tearflake, 2026
 // MIT License
 
 "use strict"
@@ -48,10 +48,7 @@ var SExpr = (
                 let success = false;
                 while (i < input.length) {
                   if (input[i] === '\n')
-                    return {
-                      err: "String not terminated",
-                      pos: {x: startCol - 1, y: startLine - 1}
-                    };
+                    throw {name: "Syntax error", message: "String not terminated", pos: {x: startCol, y: startLine}};
                   if (input[i - 1] !== '\\' && input.startsWith(quoteChar, i)) {
                     success = true;
                     advance();
@@ -66,15 +63,12 @@ var SExpr = (
                       value = '"' + JSON.parse(value) + '"';
                   }
                   catch {
-                      return {err: "String not valid", pos: {x: startCol - 1, y: startLine - 1}};
+                      throw {name: "Syntax error", message: "String not valid", pos: {x: startCol, y: startLine}};
                   }
                 }
                     
                 if (!success)
-                  return {
-                    err: "String not terminated",
-                    pos: {x: startCol - 1, y: startLine - 1}
-                  };
+                  return {name: "Syntax error", message: "String not terminated", pos: {x: startCol, y: startLine}};
                 tokens.push({ type: "STRING", value, line: startLine, col: startCol });
                 continue;
               } else {
@@ -100,7 +94,7 @@ var SExpr = (
                 }
                   
                 if (!input.startsWith('\n', i)) {
-                  return {err: "Expected newline", pos: {x: col - 1, y: line - 1}}
+                  throw {name: "Syntax error", message: "Expected newline", pos: {x: col, y: line}};
                 }
                 advance();
 
@@ -126,10 +120,7 @@ var SExpr = (
                 }
 
                 if (!success) {
-                  return {
-                    err: "String not terminated",
-                    pos: {x: startCol - 1, y: startLine - 1}
-                  };
+                  throw {name: "Syntax error", message: "String not terminated", pos: {x: startCol, y: startLine}};
                 }
 
                 tokens.push({ type: "STRING", value, line: startLine, col: startCol });
@@ -145,7 +136,7 @@ var SExpr = (
             if (/[^()\s]/.test(ch)) {
               let startLine = line, startCol = col;
               let value = "";
-              while (i < input.length && !/[()\s]/.test(peek())) {
+              while (i < input.length && !/['\"()\s]/.test(peek())) {
                 value += peek();
                 advance();
               }
@@ -153,7 +144,7 @@ var SExpr = (
               continue;
             }
 
-            throw new Error(`Unexpected character '${ch}' at ${line}:${col}`);
+            throw {name: "Syntax error", message: `Unexpected character '${ch}'`, pos: {x: line, y: col}};
           }
           return tokens;
         }
@@ -166,7 +157,7 @@ var SExpr = (
             let tok = tokens[pos];
 
             if (!tok)
-              return {err: "Unexpected end of s-expression", found: '""', pos: {x: 0, y: 0}}
+              throw {name: "Syntax error", message: "Unexpected end of s-expression", found: '""', pos: {x: 1, y: 1}};
 
             if (tok.type === "LPAREN") {
               pos++;
@@ -176,7 +167,7 @@ var SExpr = (
                 list.push(parseExpr());
               }
               if (!tokens[pos])
-                return {err: "Unclosed parenthesis", pos: {x: tok.col - 1, y: tok.line - 1}};
+                throw {name: "Syntax error", message: "Unclosed parenthesis", pos: {x: tok.col, y: tok.line}};
               pos++; // consume RPAREN
               return list;
             }
@@ -189,12 +180,7 @@ var SExpr = (
           
           let ast = parseExpr();
           if (tokens[pos] !== undefined) {
-            ast = {
-              err: "Expected end of s-expression",
-              found: tokens[pos].value,
-              pos: {x: tokens[pos].col - 1, y: tokens[pos].line - 1}
-            }
-            positions = null;
+            throw {name: "Syntax error", message: "Expected end of s-expression", found: tokens[pos].value, pos: {x: tokens[pos].col, y: tokens[pos].line}};
           }
 
           return { ast, positions };
@@ -208,28 +194,30 @@ var SExpr = (
           for (let idx of indexPath) {
             if(!Array.isArray(node))
               return {
-                err: "Syntax error",
+                name: "Syntax error",
                 found: node.value,
-                pos: {y: positions.get(node).line - 1, x: positions.get(node).col - 1}
+                pos: {y: positions.get(node).line, x: positions.get(node).col}
               };
             
             if(idx >= node.length){
                 if(node.length === 0) {
                   return {
-                    err: "Missing list elements",
+                    name: "Syntax error",
+                    message: "Missing list elements",
                     found: "empty list",
                     pos: {
-                        y: positions.get(node).line - 1,
-                        x: positions.get(node).col - 1
+                        y: positions.get(node).line,
+                        x: positions.get(node).col
                     }
                   };
                 } else {
                   return {
-                    err: "Missing list elements",
+                    name: "Syntax error",
+                    message: "Missing list elements",
                     found: "end of list",
                     pos: {
-                        y: positions.get(node).line - 1,
-                        x: positions.get(node).col - 1
+                        y: positions.get(node).line,
+                        x: positions.get(node).col
                     }
                   };
                 }
@@ -237,9 +225,9 @@ var SExpr = (
             node = node[idx];
           }
           return {
-            err: "Syntax error",
+            name: "Syntax error",
             found: (Array.isArray (node) ? "list" : node.value),
-            pos: {y: positions.get(node).line - 1, x: positions.get(node).col - 1}
+            pos: {y: positions.get(node).line, x: positions.get(node).col}
           };
         }
         
@@ -253,15 +241,15 @@ var SExpr = (
         
         function parse(code) {
           let tokens = tokenize(code);
-          if (tokens.err) return tokens;
           const { ast, positions } = getAst(tokens);
-          if (ast.err)
-            return ast;
-            
           return makeNodeTree(ast);
         }
 
-        function stringify (node) {
+        function stringify (node, ind) {
+            if (!ind) {
+                ind = "  ";
+            }
+            
             const stack = [{ node, indent: "", index: 0, result: "" }];
             let output = "";
 
@@ -289,15 +277,12 @@ var SExpr = (
                 else if (node === null) {
                     output +=  "NIL";
                 }
-                else if (node.kind === "PROG") {
-                    output +=  [`"ERROR: Unexcuted program"`];
-                }
                 else if (Array.isArray (node)) {
                     let i = index;
                     for (; i < node.length; i++) {
                         if (Array.isArray (node[i])) {
                             stack.push ({ node, indent, index: i + 1, result });
-                            stack.push ({ node: node[i], indent: indent + "    ", index: 0, result: "" });
+                            stack.push ({ node: node[i], indent: indent + ind, index: 0, result: "" });
                             break;
                         }
                         else {
@@ -314,31 +299,10 @@ var SExpr = (
                             else if (node[i] === null) {
                                 part = "NIL";
                             }
-                            else if (node[i].kind === "PROG") {
-                                part = [`"ERROR: Unexecuted program"`];
-                            }
                             else {
-                                /*
-                                if (typeof node[i] === 'string' && (node[i].charAt (0) === '"' && node[i].charAt (node[i].length - 1) === '"')) {
-                                    if (node[i].indexOf("\n") === -1) {
-                                        part = node[i];
-                                    }
-                                    else {
-                                        part = "\"\n";
-                                        let tmp = node[i].substring(1, node[i].length - 1).split("\n");
-                                        for (let j = 0; j < tmp.length - 1; j++) {
-                                            part += indent + "    " + tmp[j] + "\n";
-                                        }
-                                        part += indent + "    " + "\"";
-                                    }
-                                }
-                                else {
-                                    part = quoteIfNecessary (node[i]);
-                                }
-                                */
-                                part = formatString(node[i], indent + "    ");
+                                part = formatString(node[i], indent + ind);
                             }
-                            output += indent + "    " + part + "\n";
+                            output += indent + ind + part + "\n";
                         }
                     }
 
@@ -347,7 +311,6 @@ var SExpr = (
                     }
                 }
                 else {
-                    //output += node;
                     output += formatString(node, indent);
                 }
             }
@@ -388,7 +351,7 @@ var SExpr = (
                 }
             }
             
-            return (quoted ? '"' + str + '"' : str);
+            return (quoted ? "'" + str + "'" : str);
         }
 
         function removeComments(sexpr) {

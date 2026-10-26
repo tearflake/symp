@@ -14,69 +14,75 @@ var Parser = (
     (function () {
         "use strict";
 
-        let parseGrammar = function (grammar) {
-            let syntax = `
-                (GRAMMAR
-                    (RULE START grammar)
-                    
-                    (RULE grammar
-                        (LIST "GRAMMAR" elements))
-                    
-                    (RULE elements
-                        (LIST element elements))
-                    
-                    (RULE elements
-                        (LIST element
-                            ()))
-                    
-                    (RULE element
-                        (LIST "RULE"
-                            (LIST ATOMIC
-                                (LIST metaExp
-                                    ()))))
-                    
-                    (RULE element
-                        (LIST "COMPUTE"
-                            (LIST
-                                (LIST "NAME"
-                                    (LIST ATOMIC ()))
-                                
-                                (LIST grammar
-                                    ()))))
-
-                    (RULE metaExp
-                        (LIST "LIST"
+        let syntax = `
+            (GRAMMAR
+                (RULE START grammar)
+                
+                (RULE grammar
+                    (LIST "GRAMMAR" elements))
+                
+                (RULE elements
+                    (LIST element elements))
+                
+                (RULE elements
+                    (LIST element
+                        ()))
+                
+                (RULE element
+                    (LIST "RULE"
+                        (LIST ATOMIC
                             (LIST metaExp
-                                (LIST metaExp
-                                    ()))))
-                                    
-                    (RULE metaExp metaAtom)
-                         
-                    (RULE metaAtom
-                        (LIST "ATOM"
-                            (LIST ATOMIC
-                                (LIST metaAtom
-                                    ()))))
-                                    
-                    (RULE metaAtom atomic)
+                                ()))))
+                
+                (RULE element
+                    (LIST "COMPUTE"
+                        (LIST
+                            (LIST "NAME"
+                                (LIST ATOMIC ()))
+                            
+                            (LIST grammar
+                                ()))))
 
-                    (RULE atomic
-                        (LIST "RUN"
-                            (LIST ATOMIC
-                                ())))
-                    
-                    (RULE atomic ATOMIC)
-                    
-                    (RULE atomic ()))
-            `
-            
-            let sSyntax = SExpr.parse (syntax);
+                (RULE metaExp
+                    (LIST "LIST"
+                        (LIST metaExp
+                            (LIST metaExp
+                                ()))))
+                                
+                (RULE metaExp metaAtom)
+                     
+                (RULE metaAtom
+                    (LIST "ATOM"
+                        (LIST ATOMIC
+                            (LIST metaAtom
+                                ()))))
+                                
+                (RULE metaAtom atomic)
+
+                (RULE atomic
+                    (LIST "RUN"
+                        (LIST ATOMIC
+                            ())))
+                
+                (RULE atomic ATOMIC)
+                
+                (RULE atomic ()))
+        `;
+        
+        let sSyntax = SExpr.parse (syntax);
+
+        let parseGrammar = function (grammar) {
             let sGrammar = SExpr.parse (grammar);
-            if (sGrammar.err) return sGrammar;
             let [path, ok] = parseLowLevel (sGrammar, sSyntax);
-
-            return formatOutput (ok, sGrammar, grammar, denormalizeIndexes (path));
-        }
+            if (ok) {
+                return sGrammar;
+            }   
+            else {
+                let path = denormalizeIndexes (path);
+                let msg = SExpr.getPosition (grammar, path);
+                throw {name: "Syntax error", message: msg.err, found: msg.found, pos: msg.pos, path: path};
+            }
+        };
         
         let makeGrammar = function (sexpr) {
             let grammar = {rules: [], children: [], parent: null};
@@ -97,34 +103,49 @@ var Parser = (
             }
             
             return grammar;
-        }
+        };
         
         let parse = function (sexpr, grammar) {
             let sSexpr = SExpr.parse (sexpr);
-            if (sSexpr.err) return sSexpr;
             let [path, ok] = parseLowLevel (sSexpr, grammar);
-
-            return formatOutput (ok, sSexpr, sexpr, skipComments(denormalizeIndexes (path), sSexpr));
-        }
-        
-        let parseSExpr = function (sexpr, grammar) {
-            let [path, ok] = parseLowLevel (sexpr, grammar);
             if (ok) {
-                return sexpr;
+                return sSexpr;
+            }   
+            else {
+                path = skipComments(denormalizeIndexes (path), sSexpr);
+                let msg = SExpr.getPosition (sexpr, path);
+                throw {name: "Syntax error", message: msg.err, found: msg.found, pos: msg.pos, path: path};
+            }
+        };
+        
+        let parseSExpr = function (sSexpr, grammar) {
+            let [path, ok] = parseLowLevel (sSexpr, grammar);
+            if (ok) {
+                return sSexpr;
             }
             else {
-                return {err: "ERROR", path: skipComments(denormalizeIndexes (path), sexpr)};
+                path = skipComments(denormalizeIndexes (path), sSexpr);
+                let found = sSexpr;
+                for (let i = 0; i < path.length; i++) {
+                    found = found[path[i]];
+                }
+                
+                if (Array.isArray (found)) {
+                    found = "list";
+                }
+                
+                throw {name: "Syntax error", found: found, path: path};
             }
-        }
+        };
         
         let parseLowLevel = function (expr, grammar) {
             grammar = makeGrammar (grammar);
             let patt = "START";
 
             return match (normalizeSExpr (SExpr.removeComments (expr)), patt, grammar);
-        }
+        };
         
-        function match(expr, patt, grammar) {
+        let match = function (expr, patt, grammar) {
             let idx, from;
             let [mode, ok, stack, farPath] = ["fore", false, [], []];
             stack.push([-1, expr, patt, [], false]);
@@ -224,7 +245,7 @@ var Parser = (
             }
             
             return [farPath, ok];
-        }
+        };
 
         let compute = function (expr, patt, grammar) {
             let parent = grammar;
@@ -237,8 +258,8 @@ var Parser = (
                 parent = parent.parent;
             }
             
-            throw new Error (`Uknown compute function: ${patt[1]}`);
-        }
+            throw {name: "Error", message: `Uknown compute function: ${patt[1]}`};
+        };
 
         let compareArr = function (arr1, arr2) {
             for (var i = 0; i < arr1.length; i++) {
@@ -264,7 +285,7 @@ var Parser = (
             else {
                 return 0;
             }
-        }
+        };
 
         let normalizeSExpr = function (expr) {
             var stack = [], item;
@@ -323,16 +344,6 @@ var Parser = (
             return dnm;
         };
 
-        let formatOutput = function (ok, sexpr, text, path) {
-            if (ok) {
-                return sexpr;
-            }   
-            else {
-                let msg = SExpr.getPosition (text, path);
-                return {err: msg.err, found: msg.found, pos: msg.pos, path: path};
-            }
-        }
-        
         let skipComments = function (path, sexpr) {
             let result = [...path];
             let ts = sexpr;
@@ -349,7 +360,7 @@ var Parser = (
             }
             
             return result;
-        }
+        };
         
         return {
             parseGrammar: parseGrammar,

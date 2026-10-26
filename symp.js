@@ -17,7 +17,7 @@
     document.body.appendChild(script);
     
     var script = document.createElement('script')
-    script.src = path + "main.js"
+    script.src = path + "filesys.js"
     document.body.appendChild(script);
     
     var script = document.createElement('script')

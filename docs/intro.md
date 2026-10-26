@@ -16,18 +16,18 @@ The central abstraction in Symp is the virtual filesystem. Every program execute
 
 Unlike conventional languages, Symp does not distinguish sharply between code and data. Programs are values that may be compiled, stored in variables, passed as arguments, and invoked dynamically. Likewise, lists, literals, and procedures all belong to the same symbolic expression system. This uniform representation simplifies both the language semantics and metaprogramming.
 
-Execution follows a straightforward procedural model. Each procedure owns a local environment containing its arguments and variables. Instructions are executed sequentially unless modified by explicit jump operations. Procedures communicate exclusively through argument passing and return values, while persistent state is maintained inside the virtual filesystem.
+Execution follows a straightforward procedural model. Each procedure owns a local environment containing its arguments and variables. Instructions are executed sequentially unless modified by explicit jump operations. Procedures communicate exclusively through argument passing and return values, while runtime state is maintained inside the virtual filesystem.
 
 ### 2.1. Formal Syntax
 
 The filesystem itself is represented as a tree of directories containing named files. Each directory may contain arbitrary numbers of data files, symbolic links, and nested directories. Data files store arbitrary strings, while links store paths pointing to other filesystem objects.
 
-The following grammar describes the serialized representation of a filesystem hierarchy.
+The following grammar describes the serialized representation of a virtual filesystem hierarchy.
 
 ```
 <start> := <dir>
 
-<dir> := (DIR <name> <item>+)
+<dir> := (DIR <name> <item>*)
 
 <item> := (FILE <name> <s-expr>)
         | (LINK <name> <string>)
@@ -36,10 +36,12 @@ The following grammar describes the serialized representation of a filesystem hi
 <name> := <string>
 ```
 
-Programs are themselves stored as textual data files using a symbolic S-expression syntax. A program consists of optional argument and variable declarations followed by a sequence of instructions executed from top to bottom. Expressions may consist of literals, variables, lists, or procedure calls.
+Programs are themselves stored as data files using a symbolic S-expression syntax. A program consists of optional argument and variable declarations followed by a sequence of instructions executed from top to bottom. Expressions may consist of literals, variables, lists, procedure calls, or programs themselves.
 
 ```
-<start> := (ASM (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
+<start> := <asm>
+
+<asm> := (ASM (ARGS <identifier>+)? (VARS <identifier>+)? <instr>+)
 
 <instr> := (LABEL <identifier>)
          | (ASGN <identifier> <expr>)
@@ -55,6 +57,7 @@ Programs are themselves stored as textual data files using a symbolic S-expressi
         | <literal>
         | (LIST <expr>*)
         | <call>
+        | <asm>
 ```
 
 The S-expression notation is chosen primarily because it mirrors the internal representation used by the interpreter. Programs therefore require almost no syntactic transformation before execution, making the language particularly suitable for symbolic manipulation and program generation.
@@ -67,13 +70,17 @@ Expressions are evaluated recursively. Literal values evaluate to themselves, va
 
 Instruction execution is imperative. Assignments modify local variables, procedure calls execute for their side effects or returned values, and jump instructions alter the instruction pointer according to comparisons between evaluated expressions. Labels serve solely as jump destinations and have no effect during normal sequential execution.
 
-All persistent state resides within the virtual filesystem. Builtin procedures provide operations for creating, deleting, reading, writing, and traversing filesystem objects. Since procedures retain the directory in which they were compiled, relative path resolution remains stable regardless of where a procedure is invoked.
+All runtime state resides within the virtual filesystem. Builtin procedures provide operations for creating, deleting, reading, writing, and traversing filesystem objects. Since procedures retain the directory in which they were compiled, relative path resolution remains stable regardless of where a procedure is invoked.
 
 ## 3. Practical Examples
 
-The following examples introduce the language through a series of increasingly sophisticated programs. Each example focuses on a single concept while building upon the mechanisms introduced previously. Together they illustrate how symbolic expressions, procedure calls, recursion, and filesystem organization combine to form practical Symp programs.
+The following examples illustrate how specific programming constructs are formed, how to interact with the virtual filesystem, and how metaprogramming works to form Symp programs.
 
-### Arguments and Variables
+### Introductory examples
+
+The following examples introduce the basic concepts and features of Symp. They demonstrate the language's syntax, fundamental operations, and core programming constructs, providing a starting point for understanding how Symp programs are structured and executed. Each example focuses on a particular feature and illustrates its usage with a simple, self-contained program.
+
+#### Arguments and Variables
 
 Every procedure may declare a list of formal arguments and a collection of local variables. Arguments receive their values from the caller when the procedure is invoked, whereas variables provide mutable storage local to a single execution of the procedure.
 
@@ -87,7 +94,9 @@ In this example, the procedure `Greet` accepts a single argument, constructs a l
     (ASM
       (RETURN
         (CALL
-          (CALL read "Greet") 
+          (CALL enasm "."
+            (CALL read "Greet"))
+          
           "world")))
   )
   
@@ -106,10 +115,10 @@ In this example, the procedure `Greet` accepts a single argument, constructs a l
 **Output:**
 
 ```
-("hello" "world")
+(hello world)
 ```
 
-### Branching
+#### Branching
 
 Procedures execute sequentially unless the instruction pointer is redirected by an explicit jump instruction. Conditional jumps compare two evaluated expressions and transfer execution to a labeled instruction only when the comparison succeeds. This mechanism forms the basis for implementing conditional logic.
 
@@ -123,7 +132,9 @@ The following procedure distinguishes between two possible input values and retu
     (ASM
       (RETURN
         (CALL
-          (CALL read "FooBar")
+          (CALL enasm "."
+            (CALL read "FooBar"))
+          
           "foo")))
   )
 
@@ -153,10 +164,10 @@ The following procedure distinguishes between two possible input values and retu
 **Output:**
 
 ```
-"alpha"
+alpha
 ```
 
-### Loops
+#### Loops
 
 Although Symp does not provide dedicated looping constructs, iteration is easily expressed through labels and unconditional jumps. A procedure repeatedly executes a block of instructions until a terminating condition redirects control to the exit label.
 
@@ -170,7 +181,9 @@ This example traverses a symbolic list element by element. The procedure repeate
     (ASM
       (RETURN
         (CALL
-          (CALL read "ReverseList")
+          (CALL enasm "."
+            (CALL read "ReverseList"))
+          
           (LIST 1 2 3 4))))
   )
 
@@ -179,7 +192,7 @@ This example traverses a symbolic list element by element. The procedure repeate
       (ARGS input)
       (VARS h t acc)
       
-      (ASGN acc ())
+      (ASGN acc (LIST))
       
       (LABEL loop)
       (JMPEQ (CALL head input) NIL done)
@@ -201,7 +214,7 @@ This example traverses a symbolic list element by element. The procedure repeate
 (List 4 3 2 1)
 ```
 
-### Recursion
+#### Recursion
 
 Since procedures are ordinary values, they may compile and invoke themselves recursively. Recursive procedures are often a natural way to process hierarchical symbolic data, particularly tree-like structures.
 
@@ -215,7 +228,9 @@ The following example recursively transforms a linear sequence of control symbol
     (ASM
       (RETURN
         (CALL
-          (CALL read "Tree")
+          (CALL enasm "."
+            (CALL read "Tree"))
+          
           (LIST
             "branch"
             "branch"
@@ -228,10 +243,12 @@ The following example recursively transforms a linear sequence of control symbol
       (ARGS n)
       (VARS tree)
       
-      (ASGN tree (CALL read "Tree"))
+      (ASGN tree
+        (CALL enasm "."
+          (CALL read "Tree")))
       
       (JMPEQ
-        (head n)
+        (CALL head n)
         "halt"
         done)
       
@@ -254,19 +271,19 @@ The following example recursively transforms a linear sequence of control symbol
 
 ```
 (LIST
-    "tree"
+    tree
     (LIST
-        "tree"
-        (LIST "tree" "leaf" "leaf")
-        (LIST "tree" "leaf" "leaf"))
+        tree
+        (LIST tree leaf leaf)
+        (LIST tree leaf leaf))
     
     (LIST
         "tree"
-        (LIST "tree" "leaf" "leaf")
-        (LIST "tree" "leaf" "leaf")))
+        (LIST tree leaf leaf)
+        (LIST tree leaf leaf)))
 ```
 
-### Process Interaction
+#### Process Interaction
 
 Independent procedures may cooperate simply by compiling and invoking one another. Because procedures are loaded dynamically from the virtual filesystem, mutually recursive definitions require no special language support beyond ordinary procedure calls.
 
@@ -280,7 +297,9 @@ The following example implements mutually recursive predicates for determining w
     (ASM
       (RETURN
         (CALL
-          (CALL read "IsEven")
+          (CALL enasm "."
+            (CALL read "IsEven"))
+          
           (LIST
             "succ"
             "succ"
@@ -301,7 +320,10 @@ The following example implements mutually recursive predicates for determining w
       (RETURN TRUE)
       
       (LABEL odd)
-      (ASGN isOdd (CALL read "IsOdd"))
+      (ASGN isOdd
+        (CALL enasm "."
+          (CALL read "IsOdd")))
+      
       (RETURN
         (CALL isOdd
           (CALL tail arg))))
@@ -321,7 +343,10 @@ The following example implements mutually recursive predicates for determining w
       (RETURN FALSE)
       
       (LABEL even)
-      (ASGN isEven (CALL read "IsEven"))
+      (ASGN isEven
+        (CALL enasm "."
+          (CALL read "IsEven")))
+      
       (RETURN
         (CALL isEven
           (CALL tail arg))))
@@ -332,10 +357,10 @@ The following example implements mutually recursive predicates for determining w
 **Output:**
 
 ```
-true
+TRUE
 ```
 
-### Packaging
+#### Packaging
 
 One of Symp's distinguishing features is that directory structure naturally serves as the organizational structure of a software system. Related procedures can be grouped into directories, and relative path resolution allows each procedure to locate neighboring components without requiring a separate module or package system.
 
@@ -349,7 +374,9 @@ In this example, a directory named Unary forms a small arithmetic library implem
     (ASM
       (RETURN
         (CALL
-          (CALL read "Unary/Mul")
+          (CALL enasm "Unary"
+            (CALL read "Unary/Mul"))
+          
           (LIST
             "succ"
             "succ"
@@ -375,9 +402,12 @@ In this example, a directory named Unary forms a small arithmetic library implem
     (FILE "Add"
       (ASM
         (ARGS a b)
-        (VARS inc, acc)
+        (VARS inc acc)
         
-        (ASGN inc (CALL read "Inc"))
+        (ASGN inc
+          (CALL enasm "."
+            (CALL read "Inc")))
+        
         (ASGN acc b)
         
         (LABEL loop)
@@ -398,9 +428,12 @@ In this example, a directory named Unary forms a small arithmetic library implem
     (FILE "Mul"
       (ASM
         (ARGS a b)
-        (VARS add, acc)
+        (VARS add acc)
         
-        (ASGN add (CALL read "Add"))
+        (ASGN add
+          (CALL enasm "."
+            (CALL read "Add")))
+        
         (ASGN acc (LIST "zero"))
         
         (LABEL loop)
@@ -425,22 +458,138 @@ In this example, a directory named Unary forms a small arithmetic library implem
 
 ```
 (LIST
-    "succ"
-    "succ"
-    "succ"
-    "succ"
-    "succ"
-    "succ"
-    "zero")
+    succ
+    succ
+    succ
+    succ
+    succ
+    succ
+    zero)
+```
+
+### Filesystem examples
+
+Symp provides a virtual filesystem that allows programs to work with files, directories, and links. The following examples demonstrate how to create and manipulate filesystem objects, read and write file contents, inspect directory entries, and work with symbolic links. Together, they illustrate how filesystem operations can be performed directly from Symp programs.
+
+#### Working with Files
+
+The virtual filesystem stores file contents as symbolic expressions. The `mkfile` builtin creates an empty file, `write` replaces its contents, and `read` retrieves those contents. The following example creates a file, writes a small list of values to it, and reads the values back.
+
+**Program:**
+
+```
+(DIR "Working with files"
+  (FILE "main"
+    (ASM
+      (CALL mkfile "notes")
+      (CALL write "notes" (LIST "hello" "world"))
+      (RETURN (CALL read "notes")))
+  )
+)
+```
+
+**Output:**
+
+```
+(hello world)
+```
+
+#### Working with Directories
+
+Directories let programs organize related files and other directories. The `mkdir` builtin creates a directory, while `listdir` returns the names of the entries directly inside a directory. This example creates a workspace with an archive subdirectory and lists the workspace's contents.
+
+**Program:**
+
+```
+(DIR "Working with directories"
+  (FILE "main"
+    (ASM
+      (CALL mkdir "workspace")
+      (CALL mkdir "workspace/archive")
+      (RETURN (CALL listdir "workspace")))
+  )
+)
+```
+
+**Output:**
+
+```
+(LIST archive)
+```
+
+#### Working with Links
+
+A symbolic link stores a path to another filesystem object. The `mklink` builtin creates a link, and `writelnk` sets its target path. Filesystem operations such as `read` follow the link to access the target, while `readlnk` returns the path stored in the link itself.
+
+This example creates a file, creates a link to it, and reads the file through the link.
+
+**Program:**
+
+```
+(DIR "Working with links"
+  (FILE "main"
+    (ASM
+      (CALL mkfile "message")
+      (CALL write "message" (LIST "hello through a link"))
+      (CALL mklink "shortcut")
+      (CALL writelnk "shortcut" "message")
+      (RETURN
+        (LIST
+          (CALL read "shortcut")
+          (CALL readlnk "shortcut"))))
+  )
+)
+```
+
+**Output:**
+
+```
+(('hello through a link') message)
+```
+
+### Metaprogramming example
+
+Symp supports metaprogramming, allowing programs to construct and execute other programs dynamically. The following example demonstrates how to represent a program as a list, convert that representation into an executable `ASM` element using `enasm`, and execute the resulting program to obtain its return value. This illustrates how Symp programs can treat code as data and generate executable behavior at runtime.
+
+#### Runtime program creation
+
+n Symp, programs can be represented as lists and manipulated as data. The `enasm` builtin converts a list describing an assembly program into an executable `ASM` value. That value can then be called like any other procedure. In this example, the program builds a list containing a `RETURN` instruction, compiles the list with `enasm`, and immediately executes the resulting program.
+
+**Program:**
+
+```
+(DIR "Metaprogramming"
+  (FILE "main"
+    (ASM
+      (VARS program)
+
+      (ASGN program
+        (LIST
+          "ASM"
+          (LIST
+            "RETURN"
+            (LIST "LIST" "\"hello\"" "\"from generated code\""))))
+
+      (RETURN
+        (CALL
+          (CALL enasm "." program))))
+  )
+)
+```
+
+**Output:**
+
+```
+(hello 'from generated code')
 ```
 
 ## 4. Conclusion
 
-Symp demonstrates how a small procedural language can be combined with a mutable virtual filesystem to form a uniform symbolic computing environment. By representing programs, data, directories, and references as filesystem objects, the language eliminates the traditional distinction between code and its surrounding resources. Procedures may be compiled dynamically, passed as values, and organized according to the same directory hierarchy that stores ordinary data.
+Symp is a lightweight symbolic programming language built around a simple but powerful idea: programs, data, and references can coexist within a single mutable virtual filesystem. By treating the filesystem as the primary abstraction for both program organization and runtime state, Symp provides a unified environment in which software can be composed, inspected, and modified dynamically.
 
-Although the language provides only a modest collection of primitive instructions and builtin operations, these constructs are sufficient to express common programming techniques such as conditional execution, iteration, recursion, higher-order procedure invocation, and modular program organization. The examples presented throughout this introduction illustrate how increasingly sophisticated behavior emerges from the composition of these simple mechanisms.
+This introduction has presented the theoretical foundations of Symp, its formal syntax, and the semantics of its execution model. The practical examples have demonstrated how its basic programming constructs support conditional branching, iteration, recursion, cooperation between procedures, and modular organization through directory hierarchies. The filesystem examples have further illustrated how programs can manipulate files, directories, and symbolic links directly, while the metaprogramming example has shown how symbolic representations can be transformed into executable programs at runtime.
 
-The filesystem-centric design also encourages a modular style of development. Related procedures can be grouped into directories, reused through relative references, and composed into larger libraries without introducing separate language features for packages or modules. Since all interaction with persistent state occurs through the virtual filesystem, programs remain explicit about the resources they depend upon and manipulate.
+Together, these features demonstrate how a minimal set of language primitives can support a flexible programming model. Rather than relying on a complex collection of separate abstractions, Symp combines symbolic expressions, procedural execution, and a mutable virtual filesystem to provide a consistent foundation for computation.
 
-As a result, Symp serves both as a practical symbolic programming language and as an experimental platform for exploring alternative relationships between code, data, and storage. Its minimal core and uniform representation make it well suited for experimentation with symbolic computation, metaprogramming, program transformation, and other applications where programs themselves are treated as manipulable data.
+The examples in this document serve as a starting point for exploring the language. Further experimentation with filesystem operations, reusable procedures, and dynamically generated programs can reveal additional ways to combine Symp's core features and build more sophisticated applications.
 

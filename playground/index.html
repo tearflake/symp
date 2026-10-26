@@ -67,8 +67,8 @@
     #dark   {border-spacing: 0px; border-left: 1px solid #4466DD; border-right: 1px solid #4466DD; border-bottom: 1px solid #4466DD; color:#DDEEFF; background-color:#334488;}
 
     .dropdown-content {
-      border: 3px solid rgb(0,0,0);
-      margin-top: 0.25em;
+      /*border: 3px solid rgb(0,0,0);*/
+      /*margin-top: 0.25em;*/
         /*
       margin: 10px;
       margin-top: 0px;
@@ -83,7 +83,7 @@
       z-index: 65525;
       font-size: 0.8em;
       */
-      height: calc(100vh - 189px);
+      /*height: 98%;*//*calc(100vh - 189px);*/
       overflow: auto;
     }
 
@@ -125,6 +125,10 @@
     }
 
     
+    .dropdown-content a {
+        font-size: 0.95em;
+    }
+
     .dropdown-content a:hover {background-color:rgb(0,0,0); color:rgb(255,255,255);}
     .dropdown-content a:active {color:rgb(0,0,0); background-color:rgb(255,255,255);}
     
@@ -211,29 +215,52 @@ body::selection {
         <tbody>
         <tr height="100%">
         <td width="22%" style="width: 10em; padding-left: 0.7em; /*border: 0.2em solid black;*/ vertical-align: top;">
-<div id="drpdwncntnt" class="dropdown-content" style="font-family: sans-serif; font-size: 2em; color: black; /*line-height: 120%;*/">
-<nobr>
-        
-<div class="droplbltop" style="padding-bottom: 0.5em; font-size: 0.9em;"><b>intro examples:</b></div>
-
-        <a href="javascript:populate('greet');       ">1. args and vars</a>
-        <a href="javascript:populate('foo-bar');     ">2. branching</a>
-        <a href="javascript:populate('reverse');     ">3. loops</a>
-        <a href="javascript:populate('tree');        ">4. recursion</a>
-        <a href="javascript:populate('even-odd');    ">5. interaction</a>
-        <a href="javascript:populate('unary');       ">6. packaging</a>
-        <a href="javascript:populate('fun');         ">7. fun section</a>
-
-</nobr>
-</div>
-        </td>
-        <td width="48%" style="padding-left: 0.7em;">
             <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0">
-            <tbody><tr>
+            <tbody>
+            <tr>
              <td class="exRound" id="top" valign="middle" width="100%" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255);">
                 <font style="font-family: sans-serif; font-size: 1.75em">
                 <b>
-                  input:
+                  examples
+                </b>
+                </font>
+             </td>
+            </tr>
+            <tr height="100%"><td style="border: 0.2em solid black;">
+                <div id="drpdwncntnt" class="dropdown-content" style="padding: 0.2em; font-family: sans-serif; font-size: 2em; color: black; height: 100%;/*line-height: 120%;*/">
+                <nobr>
+                        
+                <div class="droplbltop" style="padding-bottom: 0.0em; font-size: 0.9em;"><b>intro:</b></div>
+
+                        <a href="javascript:populate('greet');       ">1. args and vars</a>
+                        <a href="javascript:populate('foo-bar');     ">2. branching</a>
+                        <a href="javascript:populate('reverse');     ">3. loops</a>
+                        <a href="javascript:populate('tree');        ">4. recursion</a>
+                        <a href="javascript:populate('even-odd');    ">5. interaction</a>
+                        <a href="javascript:populate('unary');       ">6. packaging</a>
+                <div style="height: 0.5em;"><br></div>
+
+                <div class="droplbltop" style="padding-top: 0em; font-size: 0.9em;"><b>filesys:</b></div>
+                        <a href="javascript:populate('fs1');         ">7. files</a>
+                        <a href="javascript:populate('fs2');         ">8. directories</a>
+                        <a href="javascript:populate('fs3');         ">9. links</a>
+                <div style="height: 0.5em;"><br></div>
+
+                <div class="droplbltop" style="padding-top: 0em; font-size: 0.9em;"><b>metaprog:</b></div>
+                        <a href="javascript:populate('mp1');         ">10. dynamics</a>
+                </nobr>
+                </div>
+            </td></tr>
+            </table>
+        </td>
+        <td width="48%" style="padding-left: 0.7em;">
+            <table width="100%" cellspacing="0" cellpadding="0" height="100%" border="0">
+            <tbody>
+            <tr>
+             <td class="exRound" id="top" valign="middle" width="100%" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255);">
+                <font style="font-family: sans-serif; font-size: 1.75em">
+                <b>
+                  program
                 </b>
                 </font>
              </td>
@@ -279,14 +306,14 @@ body::selection {
             <tbody><tr>
              <td class="exRound" id="top" valign="middle" style="height: 3.5em; color:rgb(0,0,0); background-color:rgb(255,255,255); white-space: nowrap; overflow: hidden; max-width: 0vw;">
                 <font style="font-family: sans-serif; font-size: 1.75em; line-height: 100%;">
-                <span class="button">
-                  <b>output:</b>
+                  <b>output</b>
+                  <span class="button">
                     <a id="bck1" onclick="process()" href="javascript:" style="text-decoration: none;">
                     <span style="padding-left: 1em; padding-right: 1em;">
-                    <b>process</b>
+                    <b>run</b>
                     </span>
                     </a>
-                </b>
+                  </span>
                 </font>
              </td>
             </tr>
@@ -439,27 +466,33 @@ body::selection {
                 //output1.wrap = "off";
                 //var output = QDBP.compile (input1.getValue ());
             
-                parsed = Main.parse (input1.getValue ());
-                if (parsed.err) {
-                    output1.setValue (parsed.err + " at " + "(" + (parsed.pos.y + 1) + ", " + (parsed.pos.x + 1) + ")\n" + "found: '" + parsed.found + "'");
-                    //document.getElementById("tm").innerHTML = "";
-                } else {
-                    //var sparsed = (Date.now () - tm)
-                    result = Main.main ([], parsed);
-                    if (result.err) {
-                        output1.setValue ("calling:\n" + result.err);
-                        //document.getElementById("tm").innerHTML = "";
-                    } else {
-                        output1.setValue (JSON.stringify (result, null, 2));
-                        //output1.setValue (SExpr.stringify (output));
-                    }
+                parsed = Filesys.parse (input1.getValue ());
+                //var sparsed = (Date.now () - tm)
+                result = Filesys.main ([], parsed);
+                //output1.setValue (JSON.stringify (result, null, 2));
+                output1.setValue (SExpr.stringify (result));
+            }
+            catch (e) {
+                strerr = e.name;
+                if (e.pos) {
+                    strerr += " at " + "(" + e.pos.y + ", " + e.pos.x + ")";
                 }
+                else if (e.path) {
+                    strerr += " at relative position " + JSON.stringify(e.path);
+                }
+                
+                if (e.message) {
+                    strerr += "\n" + e.message;
+                }
+                
+                if (e.found) {
+                    strerr += "\n" + "Found: '" + e.found + "'";
+                }
+                
+                output1.setValue (strerr);
             }
-            catch(e) {
-                output1.setValue (e.name + ":\n" + e.message);
-            }
-            //output1.selectionStart = 0;
-            //output1.selectionEnd = 0;
+            output1.selectionStart = 0;
+            output1.selectionEnd = 0;
         }, 0);
         
     }

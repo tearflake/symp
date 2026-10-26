@@ -5,139 +5,148 @@
 var Asm = (
     function (obj) {
         return {
-            parseSExpr: obj.parseSExpr,
-            run: obj.run,
-            exec: obj.exec
+            enparse: obj.enparse,
+            enlist: obj.enlist,
+            unlist: obj.unlist,
+            run: obj.run
         };
     }
 ) (
     (function () {
         "use strict";
-        function parseSExpr (sProgram) {
-            let syntax = `
-                (GRAMMAR
-                    (RULE START grammar)
 
-                    (RULE grammar
-                        (LIST "ASM" cArgs))
+        let syntax = `
+            (GRAMMAR
+                (RULE START asm)
 
-                    (RULE cArgs
-                        (LIST args cVars))
-                    
-                    (RULE cArgs cVars)
+                (RULE asm
+                    (LIST "ASM" cArgs))
 
-                    (RULE args
-                        (LIST "ARGS" plusArg))
+                (RULE cArgs
+                    (LIST args cVars))
+                
+                (RULE cArgs cVars)
 
-                    (RULE plusArg
-                        (LIST ATOMIC plusArg))
-                    
-                    (RULE plusArg
+                (RULE args
+                    (LIST "ARGS" plusArg))
+
+                (RULE plusArg
+                    (LIST ATOMIC plusArg))
+                
+                (RULE plusArg
+                    (LIST ATOMIC
+                        ()))
+                
+                (RULE cVars
+                    (LIST vars cInstr))
+                
+                (RULE cVars cInstr)
+                
+                (RULE vars
+                    (LIST "VARS" plusVar))
+
+                (RULE plusVar
+                    (LIST ATOMIC plusVar))
+                
+                (RULE plusVar
+                    (LIST ATOMIC
+                        ()))
+
+                (RULE cInstr
+                    (LIST instr cInstr))
+                
+                (RULE cInstr
+                    (LIST instr
+                        ()))
+
+                (RULE instr
+                    (LIST "LABEL"
                         (LIST ATOMIC
-                            ()))
-                    
-                    (RULE cVars
-                        (LIST vars cInstr))
-                    
-                    (RULE cVars cInstr)
-                    
-                    (RULE vars
-                        (LIST "VARS" plusVar))
-
-                    (RULE plusVar
-                        (LIST ATOMIC plusVar))
-                    
-                    (RULE plusVar
+                            ())))
+                
+                (RULE instr
+                    (LIST "ASGN"
                         (LIST ATOMIC
-                            ()))
+                            (LIST expr
+                                ()))))
+                
+                (RULE instr
+                    (LIST "JMPNE"
+                        (LIST expr
+                            (LIST expr
+                                (LIST ATOMIC
+                                    ())))))
+                
+                (RULE instr
+                    (LIST "JMPEQ"
+                        (LIST expr
+                            (LIST expr
+                                (LIST ATOMIC
+                                    ())))))
+                
+                (RULE instr
+                    (LIST "JMP"
+                        (LIST ATOMIC
+                            ())))
+                
+                (RULE instr
+                    (LIST "RETURN"
+                        (LIST expr
+                            ())))
+                
+                (RULE instr "RETURN")
+                
+                (RULE instr call)
+                
+                (RULE call
+                    (LIST "CALL"
+                        (LIST proc
+                            timesExpr)))
+                
+                (RULE proc ATOMIC)
+                
+                (RULE proc call)
+                
+                (RULE proc asm)
+                
+                (RULE expr ATOMIC)
+                
+                (RULE expr call)
+                
+                (RULE expr asm)
 
-                    (RULE cInstr
-                        (LIST instr cInstr))
-                    
-                    (RULE cInstr
-                        (LIST instr
-                            ()))
+                (RULE expr
+                    (LIST "LIST" timesExpr))
+                
+                (RULE timesExpr
+                    (LIST expr timesExpr))
+                
+                (RULE timesExpr ())
+            )
+        `;
+        
+        let sSyntax = SExpr.parse (syntax);
 
-                    (RULE instr
-                        (LIST "LABEL"
-                            (LIST ATOMIC
-                                ())))
-                    
-                    (RULE instr
-                        (LIST "ASGN"
-                            (LIST ATOMIC
-                                (LIST expr
-                                    ()))))
-                    
-                    (RULE instr
-                        (LIST "JMPNE"
-                            (LIST expr
-                                (LIST expr
-                                    (LIST ATOMIC
-                                        ())))))
-                    
-                    (RULE instr
-                        (LIST "JMPEQ"
-                            (LIST expr
-                                (LIST expr
-                                    (LIST ATOMIC
-                                        ())))))
-                    
-                    (RULE instr
-                        (LIST "JMP"
-                            (LIST ATOMIC
-                                ())))
-                    
-                    (RULE instr
-                        (LIST "RETURN"
-                            (LIST expr
-                                ())))
-                    
-                    (RULE instr "RETURN")
-                    
-                    (RULE instr call)
-                    
-                    (RULE call
-                        (LIST "CALL"
-                            (LIST expr
-                                timesExpr)))
-                    
-                    (RULE expr ATOMIC)
-                    
-                    (RULE expr
-                        (LIST "LIST" timesExpr))
-                    
-                    (RULE expr call)
-                    
-                    (RULE timesExpr
-                        (LIST expr timesExpr))
-                    
-                    (RULE timesExpr ())
-                )
-            `;
-            
-            let sSyntax = SExpr.parse (syntax);
-            
+        function enparse (sProgram, dir) {
             let ast = Parser.parseSExpr (sProgram, sSyntax);
-            
-            if (!ast.err) {
-                return makeTree(/*parseLiterals (*/SExpr.removeComments (ast)/*)*/);
+            let tree = makeTree (SExpr.removeComments (ast), dir);
+            if (tree.err) {
+                throw {name: "Syntax error", message: tree.err, path: skipComments(tree.path, ast), found: tree.found};
             }
-            else {
-                return ast;
-            }
+
+            return tree;
         }
         
-        function makeTree (sexpr) {
-            let graph = {kind: "ASM", args: [], vars: [], labels: {}, instrs: []};
+        function makeTree (sexpr, dir) {
+            let graph = {kind: "ASM", args: [], vars: [], labels: {}, instrs: [], dir: dir};
             let prog = sexpr;
             let off = 0;
             for (let i = 1; i < prog.length; i++) {
                 let elem = prog[i];
                 if (elem[0] === "ARGS") {
                     for (let j = 1; j < elem.length; j++) {
-                        if (!isIdentifier (elem[j])) {
-                            return {err: "Unexpected literal", path: [i, j]}
+                        if (isLiteral (elem[j])) {
+                            return {err: "ARGS expects identifiers", path: [i, j], found: elem[j]}
                         }
                         
                         graph.args.push (elem[j]);
@@ -147,8 +156,8 @@ var Asm = (
                 else if (elem[0] === "VARS") {
                     for (let j = 1; j < elem.length; j++) {
                         if (graph.args.indexOf (elem[j]) === -1) {
-                            if (!isIdentifier (elem[j])) {
-                                return {err: "Unexpected literal", path: [i, j]}
+                            if (isLiteral (elem[j])) {
+                                return {err: "VARS expects identifiers", path: [i, j], found: elem[j]}
                             }
                             
                             graph.vars.push (elem[j]);
@@ -170,17 +179,17 @@ var Asm = (
                     graph.instrs.push ({kind: "LABEL", label: elem[1], line: i - 1 - off});
                 }
                 else if (elem[0] === "CALL") {
-                    let c = makeExpr (elem[1]);
+                    let c = makeExpr (elem[1], dir);
                     if (c && c.err) {
                         c.path = [1, ...c.path];
                         return c;
                     }
                     
                     let a = [];
-                    for (let i = 2; i < elem.length; i++) {
-                        let ae = makeExpr(elem[i]);
+                    for (let j = 2; j < elem.length; j++) {
+                        let ae = makeExpr(elem[j], dir);
                         if (ae && ae.err) {
-                            ae.path = [i, ...ae.path];
+                            ae.path = [i, j, ...ae.path];
                             return aelem;
                         }
                         
@@ -190,54 +199,41 @@ var Asm = (
                     graph.instrs.push ({kind: "CALL", type: "STMT", calling: c, args: a});
                 }
                 else if (elem[0] === "ASGN") {
-                    let e = [];
-                    for (let i = 1; i <= 2; i++) {
-                        e[i] = makeExpr (elem[i]);
-                        if (e[i] && e[i].err) {
-                            e[i].path = [i, ...e[i].path];
-                            return e[i];
-                        }
+                    if (!isIdentifier(elem[1])) {
+                        return {err: "ASGN expects identifier as lvalue", path: [i, 1], found: (Array.isArray (elem[1]) ? "list" : elem[1])};
+                    }
+                    let v = makeExpr (elem[1], dir);
+                    let e = makeExpr (elem[2], dir);
+                    if (e && e.err) {
+                        e.path = [i, 2, ...e.path];
+                        return e;
                     }
                     
-                    graph.instrs.push ({kind: "ASGN", var: e[1].name, value: e[2]});
+                    graph.instrs.push ({kind: "ASGN", var: v, value: e});
                 }
-                else if (elem[0] === "JMPNE") {
+                else if (elem[0] === "JMPNE" || elem[0] === "JMPEQ") {
                     let e = [];
-                    for (let i = 1; i <= 2; i++) {
-                        e[i] = makeExpr (elem[i]);
-                        if (e[i] && e[i].err) {
-                            e[i].path = [i, ...e[i].path];
-                            return e[i];
+                    for (let j = 1; j <= 2; j++) {
+                        e[j] = makeExpr (elem[j], dir);
+                        if (e[j] && e[j].err) {
+                            e[j].path = [i, j, ...e[i].path];
+                            return e[j];
                         }
                     }
                     
-                    graph.instrs.push ({kind: "JMPNE", e1: e[1], e2: e[2], label: elem[3]});
-                }
-                else if (elem[0] === "JMPEQ") {
-                    let e = [];
-                    for (let i = 1; i <= 2; i++) {
-                        e[i] = makeExpr (elem[i]);
-                        if (e[i] && e[i].err) {
-                            e[i].path = [i, ...e[i].path];
-                            return e[i];
-                        }
-                    }
-                    
-                    graph.instrs.push ({kind: "JMPEQ", e1: e[1], e2: e[2], label: elem[3]});
+                    graph.instrs.push ({kind: elem[0], e1: e[1], e2: e[2], label: elem[3]});
                 }
                 else if (elem[0] === "JMP") {
                     graph.instrs.push ({kind: "JMP", label: elem[1]});
                 }
                 else if (elem[0] === "RETURN") {
-                    let e = [];
-                    let i = 1;
-                    e[i] = makeExpr (elem[i]);
-                    if (e[i] && e[i].err) {
-                        e[i].path = [i, ...e[i].path];
-                        return e[i];
+                    let e = makeExpr (elem[1], dir);
+                    if (e && e.err) {
+                        e.path = [i, 1, ...e.path];
+                        return e;
                     }
                     
-                    graph.instrs.push ({kind: "RETURN", value: e[1]});
+                    graph.instrs.push ({kind: "RETURN", value: e});
                 }
                 else if (elem === "RETURN") {
                     graph.instrs.push ({kind: "RETURN", value: null});
@@ -247,12 +243,12 @@ var Asm = (
             return graph;
         }
         
-        function makeExpr (sexpr) {
+        function makeExpr (sexpr, dir) {
             if (Array.isArray (sexpr)) {
                 if (sexpr[0] === "LIST") {
                     let args = [];
                     for (let i = 1; i < sexpr.length; i++) {
-                        let elem = makeExpr(sexpr[i]);
+                        let elem = makeExpr(sexpr[i], dir);
                         if (elem && elem.err) {
                             elem.path = [i, ...elem.path];
                             return elem;
@@ -264,7 +260,7 @@ var Asm = (
                     return {kind: "LIST", args: args};
                 }
                 else if (sexpr[0] === "CALL") {
-                    let calling = makeExpr (sexpr[1]);
+                    let calling = makeExpr (sexpr[1], dir);
                     if (calling && calling.err) {
                         calling.path = [1, ...calling.path];
                         return calling;
@@ -272,22 +268,25 @@ var Asm = (
                     
                     let args = [];
                     for (let i = 2; i < sexpr.length; i++) {
-                        let elem = makeExpr(sexpr[i]);
+                        let elem = makeExpr(sexpr[i], dir);
                         if (elem && elem.err) {
                             elem.path = [i, ...elem.path];
                             return elem;
                         }
                         
-                        args.push (elem)
+                        args.push (elem);
                     }
                     
                     return {kind: "CALL", type: "EXPR", calling: calling, args: args};
                 }
+                else if (sexpr[0] === "ASM") {
+                    return makeTree (sexpr, dir);
+                }
                 else {
-                    return {err: "Syntax error", path: []}
+                    return {err: "Make error", path: []}
                 }
             }
-            else {
+            else if (isLiteral (sexpr)) {
                 if (!Number.isNaN(Number(sexpr))) {
                     return Number(sexpr);
                 }
@@ -300,43 +299,125 @@ var Asm = (
                 else if(sexpr === "NIL") {
                     return null;
                 }
-                else if (!isIdentifier (sexpr)) {
+                else {
                     return sexpr;
                 }
-                else {
-                    return {kind: "VAR", name: sexpr};
-                }
+            }
+            else if (isIdentifier (sexpr)) {
+                return {kind: "VAR", name: sexpr};
             }
         }
 
-        function isAvailable (binder, binding){
+        function isLiteral(expr) {
+            return (
+                typeof expr === 'string' && (
+                    (expr.charAt (0) === '"' && expr.charAt (expr.length - 1) === '"') ||
+                    !Number.isNaN(Number(expr)) ||
+                    expr === "TRUE" ||
+                    expr === "FALSE" ||
+                    expr === "NIL"
+                )
+            );
+        }
+
+        function isIdentifier(expr) {
+            return (
+                typeof expr === 'string' && (
+                    (expr.charAt (0) !== '"' || expr.charAt (expr.length - 1) !== '"') &&
+                    Number.isNaN(Number(expr)) &&
+                    expr !== "TRUE" &&
+                    expr !== "FALSE" &&
+                    expr !== "NIL"
+                )
+            );
+        }
+        
+        function isAvailable (binder, binding) {
             return (!binder[binding] && !Object.prototype.hasOwnProperty.call(binder, binding))
         }
-        /*
-        function parseLiterals (expr) {
-            if (!Array.isArray(expr)) {
-                if (!Number.isNaN(Number(expr))) {
-                    return Number(expr);
-                }
-                else if (expr === "TRUE") {
-                    return true;
-                }
-                else if(expr === "FALSE") {
-                    return false;
-                }
-                else if(expr === "NIL") {
-                    return null;
-                }
-                else {
-                    return expr;
-                }
-            }
-            else {
-                return expr.map (e => parseLiterals (e));
-            }
+        
+        function contains(set, el) {
+            return (set[el] || Object.prototype.hasOwnProperty.call(set, el))
         }
-        */
-        let skipComments = function (path, sexpr) {
+        
+        function unparse (expr) {
+            return unmake (expr);
+        }
+        
+        function unmakeTree (expr) {
+            if (expr.kind === "ASM") {
+                let res = ["LIST", "ASM"];
+                if (expr.args.length > 0) {
+                    res.push (["ARGS", ...expr.args]);
+                }
+                    
+                if (expr.vars.length > 0) {
+                    res.push (["VARS", ...expr.vars]);
+                }
+                    
+                for (let i = 0; i < expr.instrs.length; i++) {
+                    instr = expr.instrs[i];
+                    if (instr.kind === "LABEL") {
+                        res.push ({kind: "LIST", args: ["LABEL", instr.label]});
+                    }
+                    else if (instr.kind === "CALL") {
+                        res.push ({kind: "LIST", args: ["CALL", unmakeExpr (instr.calling), ...instr.args.map (e => unmakeExpr (e))]});
+                    }
+                    else if (instr.kind === "ASGN") {
+                        res.push ({kind: "LIST", args: ["ASGN", instr.var.name, unmakeExpr (instr.value)]});
+                    }
+                    else if (instr.kind === "JMPNE" || instr.kind === "JMPEQ") {
+                        res.push ({kind: "LIST", args: [instr.kind, unmakeExpr (instr.e1), unmakeExpr (instr.e2), instr.label]});
+                    }
+                    else if (instr.kind === "JMP") {
+                        res.push ({kind: "LIST", args: ["JMP", instr.label]});
+                    }
+                    else if (instr.kind === "RETURN") {
+                        res.push ({kind: "LIST", args: ["RETURN", unmakeExpr (instr.value)]});
+                    }
+                }
+                
+                return res;
+            }
+            
+            throw {name: "Runtime error", message: `Expression not valid`};
+        }
+        
+        function unmakeExpr (expr) {
+            if (expr && expr.kind === "ASM") {
+                return unmakeTree (expr); 
+            }
+            else if (expr && expr.kind === "CALL") {
+                return {kind: "LIST", args: ["CALL", unmakeExpr (expr.calling), ...expr.args.map (e => unmakeExpr (e))]};
+            }
+            else if (expr && expr.kind === "LIST") {
+                return {kind: "LIST", args: ["LIST", ...expr.args.map (e => unmakeExpr (e))]};
+            }
+            else if (isLiteral (expr)) {
+                if (typeof expr === "number") {
+                    return expr.toString ();
+                }
+                else if (typeof expr === "boolean") {
+                    if (expr) {
+                        return "TRUE";
+                    }
+                    else {
+                        return "FALSE"
+                    }
+                }
+                else if (expr === null) {
+                    return "NIL";
+                }
+                else if (typeof expr === "string" && expr.charAt (0) === '"' && expr.charAt (expr.length - 1) === '"') {
+                    return expr.substring (1, expr.length - 1);
+                }
+                return expr;
+            }
+            
+            throw {name: "Runtime error", message: `Expression not valid`};
+        }
+        
+        function skipComments (path, sexpr) {
             let result = [...path];
             let ts = sexpr;
             for (let i = 0; i < path.length; i++) {
@@ -354,160 +435,195 @@ var Asm = (
             return result;
         }
         
-        function run(module, prog, args, rootModule) {
-            let code = module.pub[prog];
-            if (!code) {
-                code = module.priv[prog];
+        function enlist(sexpr) {
+            if (Array.isArray (sexpr)) {
+                return {kind: "LIST", args: sexpr.map (e => enlist (e))};
+            }
+            else {
+                if (!Number.isNaN(Number(sexpr))) {
+                    return Number(sexpr);
+                }
+                else if (sexpr === "TRUE") {
+                    return true;
+                }
+                else if (sexpr === "FALSE") {
+                    return false;
+                }
+                else if (sexpr === "NIL") {
+                    return null;
+                }
+                else if (typeof sexpr === "string") {
+                    return '"' + sexpr + '"';
+                }
             }
             
-            if (args.length !== code.args.length) {
-                throw new Error(`Argument count for '${prog}' not matching`);
+            throw {name: "Runtime error", message: "Not an S-expression"};
+        }
+        
+        function unlist(expr) {
+            if (expr && expr.kind === "ASM") {
+                throw {name: "Runtime error", message: "ASM nodes not allowed in the context"}; 
+            }
+            else if (expr && expr.kind === "LIST") {
+                return expr.args.map (e => unlist (e));
+            }
+            else {
+                if (typeof expr === "number") {
+                    return expr.toString ();
+                }
+                else if (typeof expr === "boolean") {
+                    if (expr) {
+                        return "TRUE";
+                    }
+                    else {
+                        return "FALSE"
+                    }
+                }
+                else if (expr === null) {
+                    return "NIL";
+                }
+                else if (typeof expr === "string" && expr.charAt (0) === '"' && expr.charAt (expr.length - 1) === '"') {
+                    return expr.substring (1, expr.length - 1);
+                }
+            }
+            
+            throw {name: "Runtime error", message: "Not a tree of constants"}; 
+        }
+        
+        function run (prog, args, root) {
+            if (prog.args.length != args.length) {
+                throw {name: "Runtime error", message: `Arity mismatch`};
             }
             
             let env = {};
-            code.vars.forEach (v => {env[v] = null});
-            let ai = 0;
-            code.args.forEach (a => {env[a] = args[ai++];});
-
-            let idx = 0
-            while (idx < code.instrs.length) {
-                let instr = code.instrs[idx];
-                if (instr.kind == "CALL") {
-                    evalSExpr(["CALL", ...instr.expr], env, module, module, rootModule);
+            for (let i = 0; i < prog.args.length; i++) {
+                env[prog.args[i]] = args[i];
+            }
+            
+            for (let i = 0; i < prog.vars.length; i++) {
+                env[prog.vars[i]] = undefined;
+            }
+            
+            let labels = {};
+            for (let idx = 0; idx < prog.instrs.length; idx++) {
+                if (prog.instrs[idx].kind === "LABEL") {
+                    labels[prog.instrs[idx].label] = idx;
                 }
-                else if (instr.kind == "ASGN") {
-                    //if (code.vars.indexOf (instr.var) === -1 && code.args.indexOf (instr.var) === -1) {
-                    if (!Object.hasOwn (env, instr.var)) {
-                        throw new Error(`Undeclared variable or argument '${instr.var}'`);
+            }
+            
+            let idx = 0;
+            let ctx = {env: env, root: root, dir: prog.dir};
+            while (idx < prog.instrs.length) {
+                let instr = prog.instrs[idx];
+                if (instr.kind === "CALL") {
+                    evalCall(instr, ctx);
+                }
+                else if (instr.kind ===  "RETURN") {
+                    if (instr.value === undefined) {
+                        return undefined;
                     }
                     
-                    env[instr.var] = evalSExpr(instr.value, env, module, module, rootModule);
+                    return evalExpr (instr.value, ctx);
                 }
-                else if (instr.kind == "JMPNE") {
-                    let e1 = evalSExpr(instr.e1, env, module, module);
-                    let e2 = evalSExpr(instr.e2, env, module, module);
-                    if (e1 !== e2) {
-                        if (!Object.hasOwn(code.labels, instr.label)) {
-                            throw new Error(`Nonexisting label '${instr.label}'`);
-                        }
-                        
-                        idx = code.labels[instr.label];
-                    }
+                else if (instr.kind === "ASGN") {
+                    env[instr.var.name] = evalExpr (instr.value, ctx);
                 }
-                else if (instr.kind == "JMPEQ") {
-                    let e1 = evalSExpr(instr.e1, env, module, module, rootModule);
-                    let e2 = evalSExpr(instr.e2, env, module, module, rootModule);
-                    if (e1 === e2) {
-                        if (!Object.hasOwn(code.labels, instr.label)) {
-                            throw new Error(`Nonexisting label '${instr.label}'`);
-                        }
-                        
-                        idx = code.labels[instr.label];
-                    }
-                }
-                else if (instr.kind == "JMP") {
-                    if (!Object.hasOwn(code.labels, instr.label)) {
-                        throw new Error(`Nonexisting label '${instr.label}'`);
+                else if (instr.kind === "JMPNE" || instr.kind === "JMPEQ") {
+                    let e1 = evalExpr (instr.e1, ctx);
+                    let e2 = evalExpr (instr.e2, ctx);
+                    if (!isCompiledLiteral (e1) || !isCompiledLiteral (e2)) {
+                        throw {name: "Runtime error", message: `Control flow error: compared values not reduced to literals`};
                     }
                     
-                    idx = code.labels[instr.label];
+                    if (!contains(labels, instr.label)) {
+                        throw {name: "Runtime error", message: `Nonexisting label: ${instr.label}`};
+                    }
+                    if ((instr.kind === "JMPNE") == (e1 !== e2)) {
+                        idx = labels[instr.label];
+                    }
                 }
-                else if (instr.kind == "RETURN") {
-                    return evalSExpr(instr.value, env, module, module, rootModule)
+                else if (instr.kind ===  "JMP") {
+                    if (!contains (labels, instr.label)) {
+                        throw {name: "Runtime error", message: `Nonexisting label: ${instr.label}`};
+                    }
+                    
+                    idx = labels[instr.label];
                 }
                 
-                idx++;
+                idx += 1;
             }
+            
+            return undefined;
+        }
 
-            return null;
-        }
-        
-        function exec (expr, env, module, rootModule) {
-            return evalSExpr (parseLiterals (expr), env, module, module, rootModule);
-        }
-        
-        function getFn (expr, module, rootModule) {
-            let processed = false;
-            let splfn = expr.split ("/");
-            let path = [...splfn];
-            while (splfn.length > 1) {
-                let mod = splfn.shift ();
-                if (mod === "") {
-                    module = rootModule;
-                }
-                else if (module.children[mod]) {
-                    module = module.children[mod];
-                    processed = true
-                }
-                else {
-                    if (!processed && path[0] === "stdlib" && path.length >= 2) {
-                        let fn = path.pop ();
-                        if (path.length === 1) {
-                            return [path, fn, "stdlib"];
-                        }
-                        
-                        return [path, fn, null];
-                    }
-                    path.pop ();
-                    return [path, splfn.pop (), null];
-                }
+        function evalExpr (expr, ctx) {
+            if (expr && expr.kind === "VAR") {
+                return evalVar (expr, ctx);
+            }
+            else if (expr && expr.kind === "LIST") {
+                return evalList (expr, ctx);
+            }
+            else if (expr && expr.kind === "CALL") {
+                return evalCall (expr, ctx);
             }
             
-            return[path, splfn.pop (), module]
+            return expr;
         }
-        
-        function evalSExpr (expr, env, module, curModule, rootModule) {
-            if (!rootModule) {
-                rootModule = module;
-            }
-            
-            if (!Array.isArray (expr)) {
-                if (Object.hasOwn(env, expr)) {
-                    return env[expr];
-                }
-                else if (isIdentifier(expr)) {
-                    let fn, path, tgtModule;
-                    [path, fn, tgtModule] = getFn (expr, module, rootModule);
-                    if (tgtModule && tgtModule !== "stdlib" && (Object.hasOwn(tgtModule.pub, fn) || (tgtModule === curModule && Object.hasOwn(tgtModule.priv, fn)))) {
-                        return {kind: "PROG", module: tgtModule, prog: fn};
-                    }
+
+        function evalVar (expr, ctx)  {
+            if (contains (ctx.env, expr.name)) {
+                if (ctx.env[expr.name] === undefined) {
+                    throw {name: "Runtime error", message: `Variable accessed before assignment: ${expr.name}`};
                 }
                 
-                return expr;
+                return ctx.env[expr.name];
             }
-            else if (expr[0] === "CALL") {
-                let fn = evalSExpr(expr[1], env, module, curModule, rootModule);
-                let args = expr.slice(2).map(e => evalSExpr(e, env, module, curModule, rootModule));
-                if (fn.kind == "PROG") {
-                    return evalSExpr (Main.call (fn.module, fn.prog, args), env, fn.module, fn.module, rootModule);
-                }
-                else {
-                    let path = fn.split ("/");
-                    if (path.length === 2 && path[0] === "stdlib" && STDLIB[path[1]]) {
-                        return evalSExpr (STDLIB[path[1]] ([fn, ...args]), env, module, curModule, rootModule);
-                    }
-                }
-                
-                throw new Error(`Program '${fn}' does not exists`);
+            else if (contains (Builtins, expr.name)) {
+                return Builtins[expr.name];
             }
             
-            return expr.map(e => evalSExpr(e, env, module, curModule, rootModule));
+            throw {name: "Runtime error", message: `Undeclared variable: ${expr.name}`};
         }
         
-        function isIdentifier(expr) {
+        function evalList (expr, ctx) {
+            return {kind: "LIST", args: expr.args.map (e => evalExpr (e, ctx))};
+        }
+                
+        function evalCall (expr, ctx) {
+            let fn = evalExpr (expr.calling, ctx);
+            let args = expr.args.map (e => evalExpr (e, ctx));
+            let result;
+            if (fn.kind === "ASM") {
+                result = run (fn, args, ctx.root);
+            }
+            else if (fn.kind === "NATIVE") {
+                result = fn.apply (args, ctx.root, ctx.dir);
+            }
+            else {
+                throw {name: "Runtime error", message: `Expression not callable`}
+            }
+            
+            if (expr.type === "EXPR" && result === undefined) {
+                throw {name: "Runtime error", message: `Function returned undefined result`};
+            }
+            
+            return result;
+        }
+        
+        function isCompiledLiteral(expr) {
             return (
-                typeof expr === 'string' &&
-                (expr.charAt (0) !== '"' && expr.charAt (expr.length - 1) !== '"') &&
-                Number.isNaN(Number(expr)) &&
-                (expr !== "true" && expr !== "false") &&
-                (Number.isNaN(Number(expr.charAt(0))))
+                typeof expr === 'string' ||
+                typeof expr === 'number' ||
+                typeof expr === 'boolean' ||
+                expr === null
             );
         }
-
+        
         return {
-            parseSExpr: parseSExpr,
-            run: run,
-            exec: exec
+            enparse: enparse,
+            enlist: enlist,
+            unlist: unlist,
+            run: run
         }
     }) ()
 );
@@ -519,6 +635,7 @@ if (isNode ()) {
     
     var SExpr = require ("./s-expr.js");
     var Parser = require ("./parser.js");
+    var Builtins = require ("./builtins.js");
     module.exports = Asm;
     
     // end of Node.js support
