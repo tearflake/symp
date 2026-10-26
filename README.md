@@ -38,10 +38,9 @@ In summary, virtual filesystem with meta-programming capabilities makes Symp an 
 
 While still in early development, there are several resources to check out regarding Symp virtual machine:
 
-* [introduction](./docs/intro.md)
-* [specification](./specs/asm.pseudo)
-* [builtins reference](./specs/ref.md) `// under construction //`
-* [playground](https://tearflake.github.io/symp/playground/) `// under construction //`
+* [demo-playground](https://tearflake.github.io/symp/playground/) `// under construction //`
+* [introduction to symp](./docs/intro.md)
+* [builtins reference](./docs/b-ref.md) `// under construction //`
 
 ```
 // under construction //
