@@ -32,7 +32,7 @@ Meta-programming capabilities of Symp arise from the fact that programs can take
 
 **summary**
 
-In summary, virtual filesystem with meta-programming capabilities makes Symp an extensible foundation ready to host more complex kinds of programs and their interpretations. Once enriched by higher level constructs, the system may deliver a user experience of having control over lower level constructs without getting down to bare metal assembly interface. The final automation level of programming activities is left completely up to the user requirements, and may occupy a range from very low and assembly like levels, to very high and expressive levels of abstractions.
+Virtual filesystem with meta-programming capabilities makes Symp an extensible foundation ready to host more complex kinds of programs and their interpretations. Once enriched by higher level constructs, the system may deliver controlling lower level constructs without getting down to bare metal assembly interface. The final automation level of programming activities is left completely up to the user requirements, and may occupy a range from very low and assembly like levels, to very high and expressive levels of abstractions.
 
 ## Resources
 
@@ -40,8 +40,9 @@ While still in early development, there are several resources to check out regar
 
 * [demo-playground](https://tearflake.github.io/symp/playground/)
 * [installation](./docs/install.md)
-* [introduction to symp](./docs/intro.md)
-* [builtins reference](./docs/b-ref.md) `// under construction //`
+* documentation
+    * [introduction to symp](./docs/intro.md)
+    * [builtins reference](./docs/builtins-ref.md) `// under construction //`
 
 ```
 // under construction //
