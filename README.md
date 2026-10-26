@@ -40,7 +40,7 @@ While still in early development, there are several resources to check out regar
 
 * [introduction](./docs/intro.md)
 * [specification](./specs/asm.pseudo)
-* [builtins reference](./specs/ref.md)
+* [builtins reference](./specs/ref.md) `// under construction //`
 * [playground](https://tearflake.github.io/symp/playground/) `// under construction //`
 
 ```
