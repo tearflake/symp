@@ -1,0 +1,25 @@
+{
+  "name": "@tearflake/symp",
+  "version": "0.0.7",
+  "description": "Symbolic processingvirtual machine",
+  "main": "symp.js",
+  "directories": {
+    "doc": "docs",
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tearflake/symp.git"
+  },
+  "keywords": [
+    "s-expression",
+    "filesystem",
+    "virtual-machine",
+    "assembly-middleware"
+  ],
+  "author": "tearflake",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tearflake/symp/issues"
+  },
+  "homepage": "https://github.com/tearflake/symp#readme"
+}
