@@ -271,9 +271,9 @@ var Builtins = (function() {
                 typeCheck(args, Builtins["delete"].args);
                 
                 let [item, tmpdir] = Filesys.getEntity(args[0], root, dir);
-                if(Builtins["exists"](args[0])) {
+                if(Builtins["exists"].apply([args[0]], root, dir)) {
                     tmp = pathSplit(args[0])
-                    tmpdir.items = tmpdir.items.filter(item => item.key !== tmp.name);
+                    delete tmpdir.items[tmp.name];
                 }
                 else {
                     throw {name: "Runtime error", message: `Entity ${args[0]} does not exist`};
