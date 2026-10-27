@@ -536,7 +536,7 @@ var Asm = (
                     }
                     
                     if (!contains(labels, instr.label)) {
-                        throw {name: "Runtime error", message: `Nonexisting label: ${instr.label}`};
+                        throw {name: "Runtime error", message: `Nonexisting label: '${instr.label}'`};
                     }
                     if ((instr.kind === "JMPNE") == (e1 !== e2)) {
                         idx = labels[instr.label];
@@ -544,7 +544,7 @@ var Asm = (
                 }
                 else if (instr.kind ===  "JMP") {
                     if (!contains (labels, instr.label)) {
-                        throw {name: "Runtime error", message: `Nonexisting label: ${instr.label}`};
+                        throw {name: "Runtime error", message: `Nonexisting label: '${instr.label}'`};
                     }
                     
                     idx = labels[instr.label];
@@ -573,7 +573,7 @@ var Asm = (
         function evalVar (expr, ctx)  {
             if (contains (ctx.env, expr.name)) {
                 if (ctx.env[expr.name] === undefined) {
-                    throw {name: "Runtime error", message: `Variable accessed before assignment: ${expr.name}`};
+                    throw {name: "Runtime error", message: `Variable accessed before assignment: '${expr.name}'`};
                 }
                 
                 return ctx.env[expr.name];
@@ -582,7 +582,7 @@ var Asm = (
                 return Builtins[expr.name];
             }
             
-            throw {name: "Runtime error", message: `Undeclared variable: ${expr.name}`};
+            throw {name: "Runtime error", message: `Undeclared variable: '${expr.name}'`};
         }
         
         function evalList (expr, ctx) {

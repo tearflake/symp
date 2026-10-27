@@ -1,6 +1,6 @@
 {
   "name": "@tearflake/symp",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Symbolic processingvirtual machine",
   "main": "symp.js",
   "directories": {

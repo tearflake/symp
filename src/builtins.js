@@ -216,11 +216,11 @@ var Builtins = (function() {
                 tmp = pathSplit(args[0]);
                 let [item, ] = Filesys.getEntity('"' + tmp.path.join("/") + '"', root, dir);
                 if(item.kind !== "DIR") {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' is not a directory`};
+                    throw {name: "Runtime error", message: `Entity "${tmp.path.join("/")}" is not a directory`};
                     Error(`'${tmp.path}' is not a directory`)
                 }
                 else if (item.items[tmp.name]) {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' already exists`};
+                    throw {name: "Runtime error", message: `Entity ${args[0]} already exists`};
                 }
                 
                 item.items[tmp.name] = {kind: "DIR", name: tmp.name, items: {}};
@@ -235,11 +235,11 @@ var Builtins = (function() {
                 tmp = pathSplit(args[0]);
                 let [item, ] = Filesys.getEntity('"' + tmp.path.join("/") + '"', root, dir);
                 if(item.kind !== "DIR") {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' is not a directory`};
+                    throw {name: "Runtime error", message: `Entity "${tmp.path.join("/")}" is not a directory`};
                     Error(`'${tmp.path}' is not a directory`)
                 }
                 else if (item.items[tmp.name]) {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' already exists`};
+                    throw {name: "Runtime error", message: `Entity ${args[0]} already exists`};
                 }
                 
                 item.items[tmp.name] = {kind: "FILE", value: ""}
@@ -254,11 +254,11 @@ var Builtins = (function() {
                 tmp = pathSplit(args[0]);
                 let [item, ] = Filesys.getEntity('"' + tmp.path.join("/") + '"', root, dir);
                 if(item.kind !== "DIR") {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' is not a directory`};
+                    throw {name: "Runtime error", message: `Entity "${tmp.path.join("/")}" is not a directory`};
                     Error(`'${tmp.path}' is not a directory`)
                 }
                 else if (item.items[tmp.name]) {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' already exists`};
+                    throw {name: "Runtime error", message: `Entity ${args[0]} already exists`};
                 }
                 
                 item.items[tmp.name] = {kind: "LINK", path: ""};
@@ -276,11 +276,11 @@ var Builtins = (function() {
                     tmpdir.items = tmpdir.items.filter(item => item.key !== tmp.name);
                 }
                 else {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' does not exist`};
+                    throw {name: "Runtime error", message: `Entity ${args[0]} does not exist`};
                 }
             }
         },
-        "entityexists": {
+        "exists": {
             kind: "NATIVE",
             args: ["string"],
             apply: (args, root, dir) => {
@@ -296,14 +296,14 @@ var Builtins = (function() {
                 return true;
             }
         },
-        "entitykind": {
+        "kind": {
             kind: "NATIVE",
             args: ["string"],
             apply: (args, root, dir) => {
                 typeCheck(args, Builtins["kind"].args);
                 
                 let [item, ] = Filesys.getEntity(args[0], root, dir);
-                return item.kind;
+                return `"` + item.kind + `"`;
             }
         },
         "listdir": {
@@ -314,7 +314,7 @@ var Builtins = (function() {
                 
                 let [item, ] = Filesys.getEntity(args[0], root, dir);
                 if(item.kind !== "DIR") {
-                    throw {name: "Runtime error", message: `Entity '${args[0]}' is not a directory`};
+                    throw {name: "Runtime error", message: `Entity ${args[0]} is not a directory`};
                 }
                 
                 let lst = []

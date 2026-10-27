@@ -36,13 +36,13 @@ Virtual filesystem with meta-programming capabilities makes Symp an extensible f
 
 ## Resources
 
-While still in early development, there are several resources to check out regarding Symp virtual machine:
+While still in early post-development phase, there are several resources to check out regarding Symp virtual machine:
 
 * [demo-playground](https://tearflake.github.io/symp/playground/)
 * [installation](./docs/install.md)
 * documentation
     * [introduction to symp](./docs/intro.md)
-    * [builtins reference](./docs/builtins-ref.md) `// under construction //`
+    * [builtins reference](./docs/builtins-ref.md)
 
 ```
 // under construction //
