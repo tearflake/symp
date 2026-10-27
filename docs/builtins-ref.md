@@ -4,7 +4,7 @@ Symp provides native callable values for inspecting expressions, manipulating li
 
 The signatures below use `atom`, `list`, `string`, and `asm` to describe expected argument kinds. Filesystem paths are strings interpreted relative to the directory context of the running program.
 
-## testing expressions
+## Testing expressions
 
 These predicates test the kind of a value and return a boolean (`TRUE` or `FALSE`). They are useful when code needs to distinguish atomic values, lists, and callable values.
 
@@ -26,7 +26,7 @@ Returns `TRUE` if `value` is a Symp list, and `FALSE` otherwise. An empty list i
 
 Returns `TRUE` if `value` is an assembly program or a native built-in callable. Other values, including ordinary lists and atoms, return `FALSE`.
 
-## list functions
+## List functions
 
 These functions operate on Symp lists. Lists preserve element order, and the operations return values or new lists rather than modifying the input list.
 
@@ -48,7 +48,7 @@ Returns the first element of `list`. For an empty list, it returns `NIL` (repres
 
 Returns a new list containing every element after the first. The tail of an empty list is an empty list; the tail of a one-element list is also an empty list.
 
-## callable conversion
+## Callable conversion
 
 These functions convert between executable assembly values and their symbolic list representation. This is central to metaprogramming, since a program can be inspected or assembled from data at runtime.
 
@@ -64,7 +64,7 @@ Converts the symbolic list `program-list` into an executable assembly value, usi
 
 Converts an executable assembly value into a list representing its assembly syntax. The argument must be an assembly value. The result can be treated as data, inspected or transformed, and later passed to `enasm` after being shaped into valid assembly syntax.
 
-## virtual filesystem operations
+## Virtual filesystem operations
 
 The virtual filesystem contains directories (`DIR`), files (`FILE`), and links (`LINK`). Paths are strings and are resolved relative to the current program's directory context. The creation functions expect the parent directory to exist and fail if an entity with the requested name already exists. Ordinary `read` and `write` follow links; `readlnk` and `writelnk` access link targets directly.
 
