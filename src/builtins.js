@@ -270,8 +270,8 @@ var Builtins = (function() {
             apply: (args, root, dir) => {
                 typeCheck(args, Builtins["delete"].args);
                 
-                let [item, tmpdir] = Filesys.getEntity(args[0], root, dir);
                 if(Builtins["exists"].apply([args[0]], root, dir)) {
+                    let [item, tmpdir] = Filesys.getEntity(args[0], root, dir);
                     tmp = pathSplit(args[0])
                     delete tmpdir.items[tmp.name];
                 }
