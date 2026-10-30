@@ -8,7 +8,7 @@
 
 ## About
 
-This programming virtual machine is based on S-expressions for expressing structures holding code and data. Code and data are distributed over virtual directories and files, and are intertwined into the code execution model which natively accesses the virtual filesystem. The virtual filesystem makes no distinction between code and data, making a strong case for meta-programming. Although starting from assembly-like core, the virtual machine emphasizes possibility of extending the system by new programming constructs, providing all the necessary mechanics for such activities. Thus, user defined code syntax and semantic forms can arise from these foundations.
+Symp resembles a virtual filesystem on top of which an assembly-like interpreter is bolted on. This programming virtual machine is based on S-expressions for expressing structures holding code and data. Code and data are distributed over virtual directories and files, and are intertwined into the code execution model which natively accesses the virtual filesystem. The virtual filesystem makes no distinction between code and data, making a strong case for meta-programming. Although starting from assembly-like core, the virtual machine emphasizes possibility of extending the system by new programming constructs, providing all the necessary mechanics for such activities. Thus, user defined code syntax and semantic forms can arise from these foundations.
 
 ## Details
 
